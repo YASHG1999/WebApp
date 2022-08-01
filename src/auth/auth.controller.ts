@@ -3,7 +3,7 @@ import { UserService } from '../user/user.service';
 import { AuthService } from './auth.service';
 import { VerifyOtpDto } from './dto';
 import { OtpDto } from './dto/otp.dto';
-import { refreshTokenDto } from "./dto/refresh-token.dto";
+import { refreshTokenDto } from './dto/refresh-token.dto';
 
 @Controller()
 export class AuthController {
