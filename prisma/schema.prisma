@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  REVENUEMANAGER
+  CLUSTERMANAGER
+  SHIFTMANAGER
+  FRANCHISEOWNER
+  CONSUMER
+  WAREHOUSEADMIN
+}
+
+model User {
+    id   String @id @default(uuid())
+    name String?
+
+    phone_number String @unique
+
+    email String?
+
+    avatar_url String?
+
+    phone_confirmed_at DateTime?
+
+    email_confirmed_at DateTime?
+
+    last_sign_in_at DateTime?
+
+    meta_data Json?
+
+    is_active Boolean @default(true)
+
+    banned_until DateTime?
+
+    is_super_admin Boolean @default(false)
+
+    roles UserRole @default(CONSUMER) //array
+
+    created_at DateTime @default(now())
+    updated_at DateTime @updatedAt
+    upadted_by String?
+
+    refresh_tokens refresh_token[]
+}
+
+model otp_tokens {
+  id   BigInt @id @default(autoincrement())
+
+  otp Int
+
+  user_id String?
+
+  phone_number String
+
+  valid_till DateTime?
+
+  sent_at DateTime?
+
+  retries Int?
+
+  retries_allowed Int?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  upadted_by String?
+}
+
+model refresh_token {
+  id       BigInt                    @id @default(autoincrement())
+  token String?
+  user_id String
+  valid_till DateTime?
+  revoked Boolean?
+
+  created_at DateTime? @default(now())
+  updated_at DateTime? @updatedAt
+  upadted_by String?
+
+  user_assignment   User @relation(fields: [user_id], references: [id])
+}
+
+model devices {
+  id       BigInt                    @id @default(autoincrement())
+  user_id String?
+  mac_address String?
+  manufacturer String?
+  model String?
+  os String?
+  app_version String?
+  notification_token String?
+
+  created_at DateTime? @default(now())
+  updated_at DateTime? @updatedAt
+  upadted_by String?
+}
