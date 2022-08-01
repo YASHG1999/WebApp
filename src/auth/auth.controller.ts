@@ -3,7 +3,7 @@ import { UserService } from '../user/user.service';
 import { AuthService } from './auth.service';
 import { VerifyOtpDto } from './dto';
 import { OtpDto } from './dto/otp.dto';
-import { refreshTokenDto } from './dto/refresh-token.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 @Controller()
 export class AuthController {
@@ -21,8 +21,8 @@ export class AuthController {
   }
 
   @Post('token')
-  token(@Body() refreshToken: refreshTokenDto) {
-    const a = this.authService.refreshTokens(refreshToken);
+  token(@Body() refreshToken: RefreshTokenDto) {
+    const a = this.authService.useRefreshToken(refreshToken);
     return a;
   }
 }

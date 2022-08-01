@@ -1,8 +1,6 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
-// import * as argon from 'argon2';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtPayload, Tokens } from './types';
 import { UserService } from '../user/user.service';
@@ -13,7 +11,7 @@ import { UserRole } from '../user/enum/user.role';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { UpdateUserDto } from '../user/dto/update-user.dto';
 import { VerifyOtpDto } from './dto';
-import { refreshTokenDto } from './dto/refresh-token.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 @Injectable()
 export class AuthService {
@@ -40,7 +38,7 @@ export class AuthService {
       specialChars: false,
     });
 
-    const otpData = await this.prisma.otp_tokens.create({
+    this.prisma.otp_tokens.create({
       data: { otp: Number(otpCreated), phone_number: user.phone_number },
     });
 
@@ -67,14 +65,14 @@ export class AuthService {
 
     const tokens = await this.getTokens(user.id, user.roles);
 
-    await this.prisma.refresh_token.create({
+    this.prisma.refresh_token.create({
       data: {
         token: tokens.refresh_token,
         user_id: user.id,
       },
     });
 
-    return tokens;
+    return { ...tokens, user };
   }
 
   toTimestamp(strDate): number {
@@ -82,10 +80,10 @@ export class AuthService {
     return datum / 1000;
   }
 
-  async refreshTokens(rt: refreshTokenDto) {
+  async useRefreshToken(refreshTokenDto: RefreshTokenDto) {
     const otpToken = await this.prisma.refresh_token.findFirst({
       where: {
-        token: rt.refreshToken,
+        token: refreshTokenDto.refreshToken,
       },
     });
 
@@ -95,12 +93,16 @@ export class AuthService {
       },
     });
 
-    const tokens = await this.getTokens(otpToken.user_id, user.roles);
+    const at = await this.getAccessToken(user.id, user.roles);
 
-    return tokens;
+    return {
+      access_token: at,
+      refresh_token: refreshTokenDto.refreshToken,
+      user: user,
+    };
   }
 
-  async getTokens(userId, userRole): Promise<Tokens> {
+  async getAccessToken(userId, userRole) {
     const jwtPayload: JwtPayload = {
       iss: 'url',
       iat: this.toTimestamp(Date.now()),
@@ -108,20 +110,34 @@ export class AuthService {
       role: userRole,
     };
 
-    const [at, rt] = await Promise.all([
-      this.jwtService.signAsync(jwtPayload, {
-        secret: this.config.get<string>('AT_SECRET'),
-        expiresIn: '15m',
-      }),
-      this.jwtService.signAsync(jwtPayload, {
-        secret: this.config.get<string>('RT_SECRET'),
-        expiresIn: '7d',
-      }),
-    ]);
+    const accessToken = await this.jwtService.signAsync(jwtPayload, {
+      secret: this.config.get<string>('AT_SECRET'),
+      expiresIn: '15m',
+    });
 
+    return accessToken;
+  }
+
+  async getRefreshToken(userId, userRole) {
+    const jwtPayload: JwtPayload = {
+      iss: 'url',
+      iat: this.toTimestamp(Date.now()),
+      userId: userId,
+      role: userRole,
+    };
+
+    const refreshToken = await this.jwtService.signAsync(jwtPayload, {
+      secret: this.config.get<string>('RT_SECRET'),
+      expiresIn: '7d',
+    });
+
+    return refreshToken;
+  }
+
+  async getTokens(userId, userRole) {
     return {
-      access_token: at,
-      refresh_token: rt,
+      access_token: await this.getAccessToken(userId, userRole),
+      refresh_token: await this.getRefreshToken(userId, userRole),
     };
   }
 }
