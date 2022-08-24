@@ -13,7 +13,7 @@ import { UserRole } from 'src/user/enum/user.role';
 @ApiTags('Auth')
 @UseFilters(HttpExceptionFilter)
 export class AuthController {
-  constructor(private authService: AuthService) { }
+  constructor(private authService: AuthService) {}
 
   @ApiBody({ type: OtpDto })
   @Auth()

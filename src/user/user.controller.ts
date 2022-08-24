@@ -24,7 +24,7 @@ import { UserRole } from './enum/user.role';
 @ApiTags('User')
 @UseFilters(HttpExceptionFilter)
 export class UserController {
-  constructor(private userService: UserService) { }
+  constructor(private userService: UserService) {}
 
   @Post('/create')
   @ApiBody({ type: CreateUserDto })

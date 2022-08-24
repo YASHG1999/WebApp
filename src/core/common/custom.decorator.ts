@@ -7,5 +7,5 @@ export const ROLES_KEY = 'roles';
 export const Roles = (...roles: UserRole[]) => SetMetadata(ROLES_KEY, roles);
 
 export function Auth() {
-    return applyDecorators(UseGuards(AuthGuard), ApiBearerAuth('JWT-auth'));
+  return applyDecorators(UseGuards(AuthGuard), ApiBearerAuth('JWT-auth'));
 }

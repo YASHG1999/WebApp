@@ -16,7 +16,7 @@ export class AuthGuard implements CanActivate {
   constructor(
     private configService: ConfigService,
     private reflector: Reflector,
-  ) { }
+  ) {}
 
   canActivate(context: ExecutionContext): boolean {
     const ctx = context.switchToHttp().getRequest();
