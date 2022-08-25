@@ -8,24 +8,25 @@ import {
   Patch,
   Post,
   UseFilters,
-  UseGuards,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserService } from './user.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { AddUserDeviceDto } from './dto/add-userdevice.dto';
-import { ApiBody } from '@nestjs/swagger';
-import { AuthGuard } from '../core/guards/auth.guard';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { UserDto } from './dto/user.dto';
 import { UpdateUserDeviceDto } from './dto/update-userdevice.dto';
 import { HttpExceptionFilter } from '../core/http-exception.filter';
+import { Roles } from 'src/core/common/custom.decorator';
+import { UserRole } from './enum/user.role';
 
 @Controller('user')
+@ApiTags('User')
 @UseFilters(HttpExceptionFilter)
 export class UserController {
   constructor(private userService: UserService) {}
 
-  @Post()
+  @Post('/create')
   @ApiBody({ type: CreateUserDto })
   createUser(@Body() dto: CreateUserDto) {
     return this.userService.createUser(dto);
@@ -33,7 +34,7 @@ export class UserController {
 
   // All Below this are authenticated APIs
   @Get(':id')
-  @UseGuards(AuthGuard)
+  @Roles(UserRole.CONSUMER)
   async getUser(@Param('id') id: string): Promise<UserDto> {
     const user = await this.userService.getUserFromId(id);
     if (user == null) {
@@ -43,27 +44,27 @@ export class UserController {
   }
 
   @Patch(':id')
-  @UseGuards(AuthGuard)
+  @Roles(UserRole.CONSUMER)
   @ApiBody({ type: UpdateUserDto })
   updateUser(@Param('id') id: string, @Body() dto: UpdateUserDto) {
     return this.userService.updateUser(id, dto);
   }
 
   @Post(':id/device-details')
-  @UseGuards(AuthGuard)
+  @Roles(UserRole.CONSUMER)
   @ApiBody({ type: AddUserDeviceDto })
   addUserDevice(@Param('id') id: string, @Body() dto: AddUserDeviceDto) {
     return this.userService.addUserDevice(id, dto);
   }
 
   @Get(':id/device-details')
-  @UseGuards(AuthGuard)
+  @Roles(UserRole.CONSUMER)
   getUserDevices(@Param('id') id: string) {
     return this.userService.getUserDevices(id);
   }
 
   @Patch(':id/device-details/:device_id')
-  @UseGuards(AuthGuard)
+  @Roles(UserRole.CONSUMER)
   updateUserDevice(
     @Param('id') id: string,
     @Param('device_id') device_id: string,
