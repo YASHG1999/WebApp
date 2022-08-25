@@ -6,6 +6,7 @@ import { AddUserDeviceDto } from './dto/add-userdevice.dto';
 import { JwtTokenService } from '../core/jwt-token/jwt-token.service';
 import { UserDto } from './dto/user.dto';
 import { UpdateUserDeviceDto } from './dto/update-userdevice.dto';
+import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 
 @Injectable()
 export class UserService {
@@ -104,5 +105,21 @@ export class UserService {
       success: true,
       message: 'Details added successfully',
     };
+  }
+
+  //admin
+  async getAllUsers() {
+    return await this.prisma.user.findMany();
+  }
+
+  async updateUserRoleByAdmin(user: UpdateUserRoleDto): Promise<UserDto> {
+    const updatedUserRoles = await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        roles: user.roles,
+      },
+    });
+
+    return updatedUserRoles;
   }
 }

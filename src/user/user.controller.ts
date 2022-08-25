@@ -19,13 +19,26 @@ import { UpdateUserDeviceDto } from './dto/update-userdevice.dto';
 import { HttpExceptionFilter } from '../core/http-exception.filter';
 import { Roles } from 'src/core/common/custom.decorator';
 import { UserRole } from './enum/user.role';
+import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 
 @Controller('user')
 @ApiTags('User')
 @UseFilters(HttpExceptionFilter)
 export class UserController {
-  constructor(private userService: UserService) {}
+  constructor(private userService: UserService) { }
 
+  //admin
+  @Get('/admin')
+  getAllUsers() {
+    return this.userService.getAllUsers();
+  }
+
+  @Patch('/admin')
+  updateUserRoleByAdmin(@Body() dto: UpdateUserRoleDto) {
+    return this.userService.updateUserRoleByAdmin(dto);
+  }
+
+  // user
   @Post('/create')
   @ApiBody({ type: CreateUserDto })
   createUser(@Body() dto: CreateUserDto) {
