@@ -3,8 +3,6 @@ name: Auto deploy
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
@@ -28,9 +26,11 @@ jobs:
           key: ${{ secrets.AWS_PRIVATE_KEY }}
           port: 22
           script: |
+            eval "$(ssh-agent -s)"
+            ssh-add ~/.ssh/sorted-consumer
             cd /home/ubuntu/auth-service
-            git checkout lint-ci-setup
-            git reset --hard origin/lint-ci-setup
+            git checkout main
+            git reset --hard origin/main
             git pull
             echo ${{ secrets.ENV_DEV_BASE64 }} |  base64 -d > .env
             docker-compose -f docker-compose.yml up -d --build
