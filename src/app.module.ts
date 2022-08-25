@@ -7,6 +7,8 @@ import { ConfigModule } from '@nestjs/config';
 import { JwtTokenModule } from './core/jwt-token/jwt-token.module';
 import { SmsModule } from './core/sms/sms.module';
 import { CommonModule } from './core/common/common.module';
+import { APP_GUARD } from '@nestjs/core';
+import { RolesGuard } from './core/guards/roles.guard';
 
 @Module({
   imports: [
@@ -20,6 +22,12 @@ import { CommonModule } from './core/common/common.module';
     CommonModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+  ],
 })
 export class AppModule {}

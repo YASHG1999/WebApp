@@ -17,7 +17,7 @@ import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { UserDto } from './dto/user.dto';
 import { UpdateUserDeviceDto } from './dto/update-userdevice.dto';
 import { HttpExceptionFilter } from '../core/http-exception.filter';
-import { Auth, Roles } from 'src/core/common/custom.decorator';
+import { Roles } from 'src/core/common/custom.decorator';
 import { UserRole } from './enum/user.role';
 
 @Controller('user')
@@ -34,8 +34,7 @@ export class UserController {
 
   // All Below this are authenticated APIs
   @Get(':id')
-  @Auth()
-  @Roles(UserRole.VISITOR)
+  @Roles(UserRole.CONSUMER)
   async getUser(@Param('id') id: string): Promise<UserDto> {
     const user = await this.userService.getUserFromId(id);
     if (user == null) {
@@ -45,31 +44,27 @@ export class UserController {
   }
 
   @Patch(':id')
-  @Auth()
-  @Roles(UserRole.VISITOR)
+  @Roles(UserRole.CONSUMER)
   @ApiBody({ type: UpdateUserDto })
   updateUser(@Param('id') id: string, @Body() dto: UpdateUserDto) {
     return this.userService.updateUser(id, dto);
   }
 
   @Post(':id/device-details')
-  @Auth()
-  @Roles(UserRole.VISITOR)
+  @Roles(UserRole.CONSUMER)
   @ApiBody({ type: AddUserDeviceDto })
   addUserDevice(@Param('id') id: string, @Body() dto: AddUserDeviceDto) {
     return this.userService.addUserDevice(id, dto);
   }
 
   @Get(':id/device-details')
-  @Auth()
-  @Roles(UserRole.VISITOR)
+  @Roles(UserRole.CONSUMER)
   getUserDevices(@Param('id') id: string) {
     return this.userService.getUserDevices(id);
   }
 
   @Patch(':id/device-details/:device_id')
-  @Auth()
-  @Roles(UserRole.VISITOR)
+  @Roles(UserRole.CONSUMER)
   updateUserDevice(
     @Param('id') id: string,
     @Param('device_id') device_id: string,
