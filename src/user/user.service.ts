@@ -7,6 +7,8 @@ import { JwtTokenService } from '../core/jwt-token/jwt-token.service';
 import { UserDto } from './dto/user.dto';
 import { UpdateUserDeviceDto } from './dto/update-userdevice.dto';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto';
+import { user, Prisma } from '@prisma/client';
+import { createPaginator } from 'src/core/common/paginate.service';
 
 @Injectable()
 export class UserService {
@@ -108,15 +110,31 @@ export class UserService {
   }
 
   //admin
-  async getAllUsers() {
-    return await this.prisma.user.findMany();
+  async getAllUsers(pageNo: number, limit: number) {
+    const paginate = createPaginator({ perPage: limit || 10 });
+    const users = await paginate<user, Prisma.userFindManyArgs>(
+      this.prisma.user,
+      {
+        // where: {
+        //   name: {
+        //     contains: 'Alice',
+        //   },
+        // },
+        orderBy: {
+          id: 'desc',
+        },
+      },
+      { page: pageNo },
+    );
+
+    return users;
   }
 
   async updateUserRoleByAdmin(user: UpdateUserRoleDto): Promise<UserDto> {
     const updatedUserRoles = await this.prisma.user.update({
       where: { id: user.id },
       data: {
-        roles: user.roles,
+        ...user,
       },
     });
 

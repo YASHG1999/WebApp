@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseFilters,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -25,15 +26,20 @@ import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 @ApiTags('User')
 @UseFilters(HttpExceptionFilter)
 export class UserController {
-  constructor(private userService: UserService) { }
+  constructor(private userService: UserService) {}
 
   //admin
   @Get('/admin')
-  getAllUsers() {
-    return this.userService.getAllUsers();
+  @Roles(UserRole.ADMIN)
+  getAllUsers(@Query() queryParams: { pageNo: number; perPage: number }) {
+    return this.userService.getAllUsers(
+      queryParams.pageNo,
+      queryParams.perPage,
+    );
   }
 
   @Patch('/admin')
+  @Roles(UserRole.ADMIN)
   updateUserRoleByAdmin(@Body() dto: UpdateUserRoleDto) {
     return this.userService.updateUserRoleByAdmin(dto);
   }
