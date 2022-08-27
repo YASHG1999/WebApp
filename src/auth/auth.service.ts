@@ -24,7 +24,7 @@ export class AuthService {
     private smsService: SmsService,
   ) {}
 
-  async generateOtp(token: string, otpDto: OtpDto) {
+  async generateOtp(userId: string, otpDto: OtpDto) {
     let otp = '123456';
 
     if (this.configService.get<string>('NODE_ENV') != 'development') {
@@ -34,8 +34,6 @@ export class AuthService {
         specialChars: false,
       });
     }
-
-    const decodedJwt: JwtPayload = await this.jwtTokenService.decodeJwt(token);
 
     const message = 'Please find your OTP for verification : ' + otp;
 
@@ -65,7 +63,7 @@ export class AuthService {
         data: {
           otp: otp,
           phone_number: otpDto.phone_number,
-          user_id: decodedJwt.userId,
+          user_id: userId,
           valid_till: otp_valid_time,
           retries_count: 0,
         },

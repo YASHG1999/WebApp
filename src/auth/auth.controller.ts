@@ -18,8 +18,8 @@ export class AuthController {
   @ApiBody({ type: OtpDto })
   @Roles(UserRole.VISITOR)
   @Post('otp')
-  otp(@Headers('token') token, @Body() otpDto: OtpDto) {
-    const m = this.authService.generateOtp(token, otpDto);
+  otp(@Headers('userId') userId, @Body() otpDto: OtpDto) {
+    const m = this.authService.generateOtp(userId, otpDto);
     return m;
   }
 
