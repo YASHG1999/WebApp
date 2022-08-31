@@ -14,6 +14,6 @@ export class OtpDto {
   })
   @IsNotEmpty()
   @IsString()
-  @Matches(/^[6-9]\d{9}$/gi)
+  @Matches(/^[6-9]\d{9}$/)
   phone_number: string;
 }

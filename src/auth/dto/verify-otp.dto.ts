@@ -7,7 +7,7 @@ export class VerifyOtpDto {
   })
   @IsNotEmpty()
   @IsString()
-  @Matches(/^[6-9]\d{9}$/gi)
+  @Matches(/^[6-9]\d{9}$/)
   phone_number: string;
 
   @ApiProperty({
@@ -15,6 +15,6 @@ export class VerifyOtpDto {
   })
   @IsNotEmpty()
   @IsString()
-  @Matches(/\d{6}$/gi)
+  @Matches(/\d{6}$/)
   otp: string;
 }
