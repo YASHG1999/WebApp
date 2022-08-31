@@ -98,6 +98,13 @@ export class AuthService {
       },
     });
 
+    if (otpToken == null) {
+      throw new HttpException(
+        { message: 'OTP does not exist' },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     await this.prisma.otp_tokens.deleteMany({
       where: {
         phone_number: verifyOtpDto.phone_number,
@@ -105,7 +112,10 @@ export class AuthService {
     });
 
     if (verifyOtpDto.otp != otpToken.otp) {
-      throw new HttpException('OTP does not match', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        { message: 'OTP does not match' },
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     let user = await this.userService.getUserFromPhone(
