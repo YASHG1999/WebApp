@@ -7,25 +7,30 @@ import { JwtTokenService } from '../core/jwt-token/jwt-token.service';
 import { UserDto } from './dto/user.dto';
 import { UpdateUserDeviceDto } from './dto/update-userdevice.dto';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto';
-import { user, Prisma } from '@prisma/client';
-import { createPaginator } from 'src/core/common/paginate.service';
+import { UserEntity } from './user.entity';
+import { DataSource } from 'typeorm';
+import { RefreshTokenEntity } from '../auth/refresh-token.entity';
 
 @Injectable()
 export class UserService {
   constructor(
     private prisma: PrismaService,
     private jwtTokenService: JwtTokenService,
+    private dataSource: DataSource,
   ) {}
 
   async createUser(dto: CreateUserDto) {
-    const user = await this.prisma.user.create({ data: dto });
+    const userRepository = this.dataSource.getRepository(UserEntity);
+    const user = await userRepository.save(dto);
+
     const tokens = await this.jwtTokenService.getTokens(user.id, user.roles);
 
-    this.prisma.refresh_token.create({
-      data: {
-        token: tokens.refresh_token,
-        user_id: user.id,
-      },
+    const refreshTokenRepository =
+      this.dataSource.getRepository(RefreshTokenEntity);
+
+    await refreshTokenRepository.save({
+      token: tokens.refresh_token,
+      user_id: user.id,
     });
 
     return { user, ...tokens };
@@ -111,23 +116,19 @@ export class UserService {
 
   //admin
   async getAllUsers(pageNo: number, limit: number) {
-    const paginate = createPaginator({ perPage: limit || 10 });
-    const users = await paginate<user, Prisma.userFindManyArgs>(
-      this.prisma.user,
-      {
-        // where: {
-        //   name: {
-        //     contains: 'Alice',
-        //   },
-        // },
-        orderBy: {
-          id: 'desc',
-        },
-      },
-      { page: pageNo },
-    );
-
-    return users;
+    // const paginate = createPaginator({ perPage: limit || 10 });
+    // const userRepository = this.dataSource.getRepository(User);
+    // const users = await paginate<user, >userRepository.find({});
+    // const users = await paginate<user, Prisma.userFindManyArgs>(
+    //   this.prisma.user,
+    //   {
+    //     orderBy: {
+    //       id: 'desc',
+    //     },
+    //   },
+    //   { page: pageNo },
+    // );
+    // return users;
   }
 
   async updateUserRoleByAdmin(user: UpdateUserRoleDto): Promise<UserDto> {

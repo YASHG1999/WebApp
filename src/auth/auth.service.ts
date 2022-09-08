@@ -92,6 +92,10 @@ export class AuthService {
     const otpToken = await this.prisma.otp_tokens.findFirst({
       where: {
         phone_number: verifyOtpDto.phone_number,
+        otp: verifyOtpDto.otp,
+        // created_at: {
+        //   lt: Date.now(),
+        // },
       },
       orderBy: {
         created_at: 'desc',
