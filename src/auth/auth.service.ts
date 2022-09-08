@@ -45,9 +45,7 @@ export class AuthService {
       );
     }
 
-    const otp_valid_time = new Date(
-      Date.now() + this.configService.get<number>('OTP_VALIDITY') * 1000,
-    );
+    const otp_valid_time = new Date(Date.now() + 300 * 1000);
 
     let otpData = await this.prisma.otp_tokens.findFirst({
       where: {
