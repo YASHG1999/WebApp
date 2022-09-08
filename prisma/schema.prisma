@@ -51,8 +51,8 @@ model otp_tokens {
   retries_count Int?
   retries_allowed Int?
   created_at DateTime @default(now())
-  updated_by DateTime @updatedAt
-  upadted_by String?
+  updated_at DateTime @updatedAt
+  updated_by String?
   otp_user_mapping user @relation(fields: [user_id], references: [id])
   @@index([phone_number])
 }
