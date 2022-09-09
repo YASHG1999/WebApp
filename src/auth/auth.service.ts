@@ -174,7 +174,7 @@ export class AuthService {
     const refreshTokenRepository =
       this.dataSource.getRepository(RefreshTokenEntity);
 
-    const refreshToken = await refreshTokenRepository.findOne({
+    await refreshTokenRepository.findOne({
       where: { token: logoutDto.refresh_token },
     });
 

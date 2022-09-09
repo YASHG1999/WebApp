@@ -1,13 +1,4 @@
-import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-  OneToOne,
-  JoinColumn,
-  Generated,
-} from 'typeorm';
+import { Column, UpdateDateColumn } from 'typeorm';
 
 export class CommonEntity {
   @UpdateDateColumn()

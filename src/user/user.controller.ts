@@ -7,7 +7,6 @@ import {
   Param,
   Patch,
   Post,
-  Query,
   UseFilters,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -20,7 +19,6 @@ import { UpdateUserDeviceDto } from './dto/update-userdevice.dto';
 import { HttpExceptionFilter } from '../core/http-exception.filter';
 import { Roles } from 'src/core/common/custom.decorator';
 import { UserRole } from './enum/user.role';
-import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 
 @Controller('user')
 @ApiTags('User')

@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -6,12 +6,9 @@ import { AddUserDeviceDto } from './dto/add-userdevice.dto';
 import { JwtTokenService } from '../core/jwt-token/jwt-token.service';
 import { UserDto } from './dto/user.dto';
 import { UpdateUserDeviceDto } from './dto/update-userdevice.dto';
-import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 import { UserEntity } from './user.entity';
 import { DataSource } from 'typeorm';
 import { RefreshTokenEntity } from '../auth/refresh-token.entity';
-import { createPaginator } from '../core/common/paginate.service';
-import { user, Prisma } from '@prisma/client';
 import { DevicesEntity } from './devices.entity';
 
 @Injectable()
