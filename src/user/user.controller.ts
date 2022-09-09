@@ -29,20 +29,20 @@ export class UserController {
   constructor(private userService: UserService) {}
 
   //admin
-  @Get('/admin')
-  @Roles(UserRole.ADMIN)
-  getAllUsers(@Query() queryParams: { pageNo: number; perPage: number }) {
-    return this.userService.getAllUsers(
-      queryParams.pageNo,
-      queryParams.perPage,
-    );
-  }
+  // @Get('/admin')
+  // @Roles(UserRole.ADMIN)
+  // getAllUsers(@Query() queryParams: { pageNo: number; perPage: number }) {
+  //   return this.userService.getAllUsers(
+  //     queryParams.pageNo,
+  //     queryParams.perPage,
+  //   );
+  // }
 
-  @Patch('/admin')
-  @Roles(UserRole.ADMIN)
-  updateUserRoleByAdmin(@Body() dto: UpdateUserRoleDto) {
-    return this.userService.updateUserRoleByAdmin(dto);
-  }
+  // @Patch('/admin')
+  // @Roles(UserRole.ADMIN)
+  // updateUserRoleByAdmin(@Body() dto: UpdateUserRoleDto) {
+  //   return this.userService.updateUserRoleByAdmin(dto);
+  // }
 
   // user
   @Post('/create')

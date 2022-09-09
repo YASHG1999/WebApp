@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -10,6 +10,9 @@ import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 import { UserEntity } from './user.entity';
 import { DataSource } from 'typeorm';
 import { RefreshTokenEntity } from '../auth/refresh-token.entity';
+import { createPaginator } from '../core/common/paginate.service';
+import { user, Prisma } from '@prisma/client';
+import { DevicesEntity } from './devices.entity';
 
 @Injectable()
 export class UserService {
@@ -21,12 +24,11 @@ export class UserService {
 
   async createUser(dto: CreateUserDto) {
     const userRepository = this.dataSource.getRepository(UserEntity);
-    const user = await userRepository.save(dto);
-
-    const tokens = await this.jwtTokenService.getTokens(user.id, user.roles);
-
     const refreshTokenRepository =
       this.dataSource.getRepository(RefreshTokenEntity);
+
+    const user = (await userRepository.save(dto)) as UserDto;
+    const tokens = await this.jwtTokenService.getTokens(user.id, user.roles);
 
     await refreshTokenRepository.save({
       token: tokens.refresh_token,
@@ -37,53 +39,45 @@ export class UserService {
   }
 
   async getUserFromId(id: string): Promise<UserDto> {
-    const user = await this.prisma.user.findUnique({
-      where: {
-        id: id,
-      },
+    const userRepository = this.dataSource.getRepository(UserEntity);
+    const user = await userRepository.findOne({
+      where: { id: id },
     });
     return user;
   }
 
   async getUserFromPhone(phone: string) {
-    const user = await this.prisma.user.findUnique({
-      where: {
-        phone_number: phone,
-      },
+    const userRepository = this.dataSource.getRepository(UserEntity);
+    const user = await userRepository.findOne({
+      where: { phone_number: phone },
     });
     return user;
   }
 
   async updateUser(id: string, updateUserDto: UpdateUserDto) {
-    const user = await this.prisma.user.update({
-      where: {
-        id: id,
-      },
-      data: updateUserDto,
-    });
+    const userRepository = this.dataSource.getRepository(UserEntity);
+    const user = await userRepository.update({ id: id }, updateUserDto);
     return user;
   }
 
   async addUserDevice(id: string, addDeviceDto: AddUserDeviceDto) {
+    const devicesRepository = this.dataSource.getRepository(DevicesEntity);
+
     let device = null;
 
     if (addDeviceDto.device_id != null) {
-      device = this.prisma.devices.findUnique({
-        where: {
-          device_id: addDeviceDto.device_id,
-        },
+      device = devicesRepository.findOne({
+        where: { device_id: addDeviceDto.device_id },
       });
     }
 
     if (device == null) {
-      await this.prisma.devices.create({ data: addDeviceDto });
+      await devicesRepository.save(addDeviceDto);
     } else {
-      await this.prisma.devices.update({
-        where: {
-          device_id: addDeviceDto.device_id,
-        },
-        data: addDeviceDto,
-      });
+      await devicesRepository.update(
+        { device_id: addDeviceDto.device_id },
+        addDeviceDto,
+      );
     }
 
     return {
@@ -93,7 +87,8 @@ export class UserService {
   }
 
   async getUserDevices(id: string) {
-    const devices = await this.prisma.devices.findMany({
+    const devicesRepository = this.dataSource.getRepository(DevicesEntity);
+    const devices = devicesRepository.find({
       where: { user_id: id },
     });
     return devices;
@@ -103,10 +98,11 @@ export class UserService {
     device_id: string,
     updateUserDeviceDto: UpdateUserDeviceDto,
   ) {
-    await this.prisma.devices.update({
-      where: { device_id: device_id },
-      data: updateUserDeviceDto,
-    });
+    const devicesRepository = this.dataSource.getRepository(DevicesEntity);
+    await devicesRepository.update(
+      { device_id: device_id },
+      updateUserDeviceDto,
+    );
 
     return {
       success: true,
@@ -115,30 +111,29 @@ export class UserService {
   }
 
   //admin
-  async getAllUsers(pageNo: number, limit: number) {
-    // const paginate = createPaginator({ perPage: limit || 10 });
-    // const userRepository = this.dataSource.getRepository(User);
-    // const users = await paginate<user, >userRepository.find({});
-    // const users = await paginate<user, Prisma.userFindManyArgs>(
-    //   this.prisma.user,
-    //   {
-    //     orderBy: {
-    //       id: 'desc',
-    //     },
-    //   },
-    //   { page: pageNo },
-    // );
-    // return users;
-  }
-
-  async updateUserRoleByAdmin(user: UpdateUserRoleDto): Promise<UserDto> {
-    const updatedUserRoles = await this.prisma.user.update({
-      where: { id: user.id },
-      data: {
-        ...user,
-      },
-    });
-
-    return updatedUserRoles;
-  }
+  // async getAllUsers(pageNo: number, limit: number) {
+  //   const paginate = createPaginator({ perPage: limit || 10 });
+  //   const users = await paginate<user, Prisma.userFindManyArgs>(
+  //     this.prisma.user,
+  //     {
+  //       orderBy: {
+  //         id: 'desc',
+  //       },
+  //     },
+  //     { page: pageNo },
+  //   );
+  //
+  //   return users;
+  // }
+  //
+  // async updateUserRoleByAdmin(user: UpdateUserRoleDto): Promise<UserDto> {
+  //   const updatedUserRoles = await this.prisma.user.update({
+  //     where: { id: user.id },
+  //     data: {
+  //       ...user,
+  //     },
+  //   });
+  //
+  //   return updatedUserRoles;
+  // }
 }

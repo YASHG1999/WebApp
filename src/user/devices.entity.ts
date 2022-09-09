@@ -9,7 +9,7 @@ import {
 } from 'typeorm';
 import { CommonEntity } from '../core/common/common.entity';
 
-@Entity({ name: 'otp_tokens', schema: 'auth' })
+@Entity({ name: 'devices', schema: 'auth' })
 export class DevicesEntity extends CommonEntity {
   @PrimaryGeneratedColumn('uuid')
   id: bigint;

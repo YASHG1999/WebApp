@@ -6,6 +6,8 @@ import {
   UpdateDateColumn,
   OneToOne,
   JoinColumn,
+  Generated,
+  Index,
 } from 'typeorm';
 import { UserRole } from './enum/user.role';
 import Any = jasmine.Any;
@@ -55,8 +57,10 @@ export class UserEntity extends CommonEntity {
   banned_until: Date;
 
   @Column({
+    type: 'enum',
     enum: UserRole,
-    default: [UserRole.VISITOR],
+    array: true,
+    default: UserRole[UserRole.VISITOR],
   })
-  roles: UserRole;
+  roles: UserRole[];
 }

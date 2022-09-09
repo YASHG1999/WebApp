@@ -9,13 +9,10 @@ import {
 } from 'typeorm';
 import { CommonEntity } from '../core/common/common.entity';
 
-@Entity({ name: 'otp_tokens', schema: 'auth' })
+@Entity({ name: 'refresh_token', schema: 'auth' })
 export class RefreshTokenEntity extends CommonEntity {
   @PrimaryGeneratedColumn()
   id: bigint;
-
-  @Column()
-  otp: string;
 
   @Column()
   token: string;

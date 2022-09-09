@@ -6,15 +6,16 @@ import {
   UpdateDateColumn,
   OneToOne,
   JoinColumn,
+  Generated,
 } from 'typeorm';
 
 export class CommonEntity {
-  @CreateDateColumn()
-  created_at: Date;
+  @UpdateDateColumn()
+  created_at!: Date;
 
   @UpdateDateColumn()
-  updated_at: Date;
+  updated_at!: Date;
 
   @Column()
-  updated_by: string;
+  updated_by?: string;
 }
