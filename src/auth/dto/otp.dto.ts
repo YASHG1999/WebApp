@@ -7,6 +7,7 @@ export class OtpDto {
   })
   @IsNotEmpty()
   @IsString()
+  @Matches(/^[+]\d{1,2}$/)
   country_code: string;
 
   @ApiProperty({
