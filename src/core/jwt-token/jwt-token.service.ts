@@ -15,7 +15,6 @@ export class JwtTokenService {
   async getAccessToken(userId, userRole) {
     const jwtPayload: JwtPayload = {
       iss: this.configService.get<string>('ISS'),
-      iat: Date.now(),
       userId: userId,
       roles: userRole,
     };
@@ -31,7 +30,6 @@ export class JwtTokenService {
   async getRefreshToken(userId, userRole) {
     const jwtPayload: JwtPayload = {
       iss: this.configService.get<string>('ISS'),
-      iat: Date.now(),
       userId: userId,
       roles: userRole,
     };

@@ -34,7 +34,7 @@ model user {
     roles UserRole[] @default([VISITOR])
     created_at DateTime @default(now())
     updated_at DateTime @updatedAt
-    upadted_by String?
+    updated_by String?
     refresh_tokens refresh_token[]
     devices devices[]
     otp otp_tokens[]
@@ -52,7 +52,7 @@ model otp_tokens {
   retries_allowed Int?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-  upadted_by String?
+  updated_by String?
   otp_user_mapping user @relation(fields: [user_id], references: [id])
   @@index([phone_number])
 }
@@ -65,7 +65,7 @@ model refresh_token {
   revoked Boolean @default(false)
   created_at DateTime? @default(now())
   updated_at DateTime? @updatedAt
-  upadted_by String?
+  updated_by String?
   token_user_mapping user @relation(fields: [user_id], references: [id])
   @@index([user_id])
 }
@@ -84,7 +84,7 @@ model devices {
   notification_token String? @db.VarChar(255)
   created_at DateTime? @default(now())
   updated_at DateTime? @updatedAt
-  upadted_by String?
+  updated_by String?
   device_user_mapping user @relation(fields: [user_id], references: [id])
   @@index([user_id])
 }
