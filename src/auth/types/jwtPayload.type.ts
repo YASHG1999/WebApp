@@ -6,4 +6,5 @@ export type JwtPayload = {
   iat: number;
   userId: string;
   roles: typeof UserRole[];
+  defaultRole: UserRole;
 };
