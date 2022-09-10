@@ -58,7 +58,10 @@ export class UserService {
 
   async updateUser(id: string, updateUserDto: UpdateUserDto) {
     const userRepository = this.dataSource.getRepository(UserEntity);
-    const user = await userRepository.update({ id: id }, updateUserDto);
+    const user = await userRepository.save({
+      id: id,
+      name: updateUserDto.name,
+    });
     return user;
   }
 
