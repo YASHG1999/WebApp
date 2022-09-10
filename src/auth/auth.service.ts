@@ -127,7 +127,11 @@ export class AuthService {
       });
     }
 
-    const tokens = await this.jwtTokenService.getTokens(user.id, user.roles);
+    const tokens = await this.jwtTokenService.getTokens(
+      user.id,
+      user.roles,
+      UserRole.CONSUMER,
+    );
 
     await refreshTokenRepository.save({
       token: tokens.refresh_token,
@@ -161,11 +165,17 @@ export class AuthService {
       where: { id: refreshToken.user_id },
     });
 
-    const at = await this.jwtTokenService.getAccessToken(user.id, user.roles);
+    const tokens = await this.jwtTokenService.getTokens(
+      user.id,
+      user.roles,
+      (
+        await this.jwtTokenService.decodeJwt(refreshToken.token)
+      ).defaultRole,
+    );
 
     return {
-      access_token: at,
-      refresh_token: refreshTokenDto.refresh_token,
+      access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token,
       user: user,
     };
   }

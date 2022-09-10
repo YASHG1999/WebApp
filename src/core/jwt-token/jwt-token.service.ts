@@ -2,21 +2,20 @@ import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { JwtPayload } from '../../auth/types';
-import { CommonService } from '../common/common.service';
 
 @Injectable()
 export class JwtTokenService {
   constructor(
     private jwtService: JwtService,
     private configService: ConfigService,
-    private commonService: CommonService,
   ) {}
 
-  async getAccessToken(userId, userRole) {
+  async getAccessToken(userId, userRole, defaultRole) {
     const jwtPayload: JwtPayload = {
       iss: this.configService.get<string>('ISS'),
       userId: userId,
       roles: userRole,
+      defaultRole: defaultRole,
     };
 
     const accessToken = await this.jwtService.signAsync(jwtPayload, {
@@ -27,11 +26,12 @@ export class JwtTokenService {
     return accessToken;
   }
 
-  async getRefreshToken(userId, userRole) {
+  async getRefreshToken(userId, userRole, defaultRole) {
     const jwtPayload: JwtPayload = {
       iss: this.configService.get<string>('ISS'),
       userId: userId,
       roles: userRole,
+      defaultRole: defaultRole,
     };
 
     const refreshToken = await this.jwtService.signAsync(jwtPayload, {
@@ -42,14 +42,14 @@ export class JwtTokenService {
     return refreshToken;
   }
 
-  async getTokens(userId, userRole) {
+  async getTokens(userId, userRole, defaultRole) {
     return {
-      access_token: await this.getAccessToken(userId, userRole),
-      refresh_token: await this.getRefreshToken(userId, userRole),
+      access_token: await this.getAccessToken(userId, userRole, defaultRole),
+      refresh_token: await this.getRefreshToken(userId, userRole, defaultRole),
     };
   }
 
-  async decodeJwt(token: string) {
+  async decodeJwt(token: string): Promise<JwtPayload> {
     const decodedJwtAccessToken: JwtPayload = this.jwtService.decode(
       token,
     ) as JwtPayload;

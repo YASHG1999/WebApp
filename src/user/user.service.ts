@@ -10,6 +10,7 @@ import { UserEntity } from './user.entity';
 import { DataSource } from 'typeorm';
 import { RefreshTokenEntity } from '../auth/refresh-token.entity';
 import { DevicesEntity } from './devices.entity';
+import { UserRole } from './enum/user.role';
 
 @Injectable()
 export class UserService {
@@ -25,7 +26,11 @@ export class UserService {
       this.dataSource.getRepository(RefreshTokenEntity);
 
     const user = (await userRepository.save(dto)) as UserDto;
-    const tokens = await this.jwtTokenService.getTokens(user.id, user.roles);
+    const tokens = await this.jwtTokenService.getTokens(
+      user.id,
+      user.roles,
+      UserRole.VISITOR,
+    );
 
     await refreshTokenRepository.save({
       token: tokens.refresh_token,
