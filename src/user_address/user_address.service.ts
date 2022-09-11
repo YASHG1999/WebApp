@@ -8,7 +8,10 @@ import { UpdateAddressDto } from './dto/update_address.dto';
 export class UserAddressService {
   constructor(private dataSource: DataSource) {}
 
-  async createUserAddress(addressBody: CreateAddressDto, user_id: string) {
+  async createUserAddress(
+    addressBody: CreateAddressDto,
+    user_id: string,
+  ): Promise<UserAddress> {
     const userRepository = this.dataSource.getRepository(UserAddress);
     const body = { ...addressBody, user_id };
     return await userRepository.save(body);
@@ -18,7 +21,7 @@ export class UserAddressService {
     addressBody: UpdateAddressDto,
     user_id: string,
     addressId: number,
-  ) {
+  ): Promise<UserAddress> {
     const userRepository = this.dataSource.getRepository(UserAddress);
 
     const address = await userRepository
@@ -41,12 +44,15 @@ export class UserAddressService {
     return address.raw[0];
   }
 
-  async getUserAddresses(user_id: string) {
+  async getUserAddresses(user_id: string): Promise<UserAddress[]> {
     const userRepository = this.dataSource.getRepository(UserAddress);
     return await userRepository.findBy({ user_id: user_id, is_active: true });
   }
 
-  async deleteUserAddress(user_id: string, addressId: number) {
+  async deleteUserAddress(
+    user_id: string,
+    addressId: number,
+  ): Promise<{ deleted: true }> {
     const userRepository = this.dataSource.getRepository(UserAddress);
 
     const address = await userRepository
@@ -67,6 +73,6 @@ export class UserAddressService {
       );
     }
 
-    return { delete: true };
+    return { deleted: true };
   }
 }
