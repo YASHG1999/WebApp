@@ -62,7 +62,7 @@ export class UserService {
       id: id,
       name: updateUserDto.name,
     });
-    return user;
+    return userRepository.findOne({ where: { id: id } });
   }
 
   async addUserDevice(id: string, addDeviceDto: AddUserDeviceDto) {
