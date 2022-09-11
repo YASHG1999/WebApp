@@ -18,7 +18,7 @@ import { UserAddressService } from './user_address.service';
 import { UpdateAddressDto } from './dto/update_address.dto';
 import { UserAddress } from './user_address.entity';
 
-@Controller('address')
+@Controller('addresses')
 @ApiTags('User-Address')
 @UseFilters(HttpExceptionFilter)
 export class UserAddressController {
