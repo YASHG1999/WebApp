@@ -8,6 +8,7 @@ import { CommonModule } from './core/common/common.module';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './core/guards/roles.guard';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { UserAddressModule } from './user_address/user_address.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     JwtTokenModule,
     SmsModule,
     CommonModule,
+    UserAddressModule,
   ],
   controllers: [],
   providers: [
