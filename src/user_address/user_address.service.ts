@@ -6,7 +6,7 @@ import { UpdateAddressDto } from './dto/update_address.dto';
 
 @Injectable()
 export class UserAddressService {
-  constructor(private dataSource: DataSource) { }
+  constructor(private dataSource: DataSource) {}
 
   async createUserAddress(addressBody: CreateAddressDto, user_id: string) {
     const userRepository = this.dataSource.getRepository(UserAddress);
