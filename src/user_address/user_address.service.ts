@@ -1,12 +1,12 @@
 import { DataSource } from 'typeorm';
 import { CreateAddressDto } from './dto/create_address.dto';
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { UserAddress } from './user_address.entity';
 import { UpdateAddressDto } from './dto/update_address.dto';
 
 @Injectable()
 export class UserAddressService {
-  constructor(private dataSource: DataSource) {}
+  constructor(private dataSource: DataSource) { }
 
   async createUserAddress(addressBody: CreateAddressDto, user_id: string) {
     const userRepository = this.dataSource.getRepository(UserAddress);
@@ -32,7 +32,10 @@ export class UserAddressService {
       .execute();
 
     if (!address.raw[0]) {
-      throw Error('Address is not found');
+      throw new HttpException(
+        { message: 'Address is not found' },
+        HttpStatus.NOT_FOUND,
+      );
     }
 
     return address.raw[0];
@@ -58,7 +61,10 @@ export class UserAddressService {
       .execute();
 
     if (!address.raw[0]) {
-      throw Error('Address is not found or it is already deleted');
+      throw new HttpException(
+        { message: 'Address is not found or it is already deleted' },
+        HttpStatus.NOT_FOUND,
+      );
     }
 
     return { delete: true };
