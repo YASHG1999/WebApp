@@ -155,10 +155,7 @@ export class AuthService {
     );
 
     if (decodedJwt.exp < Date.now()) {
-      throw new HttpException(
-        'Refresh Token has expired',
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new HttpException({ message: 'Refresh Token has expired' }, 469);
     }
 
     const user = await userRepository.findOne({
