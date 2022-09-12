@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtModule } from '@nestjs/jwt';
-import { PrismaModule } from '../prisma/prisma.module';
 import { UserService } from '../user/user.service';
 import { JwtTokenService } from '../core/jwt-token/jwt-token.service';
 import { HttpModule } from '@nestjs/axios';
@@ -14,7 +13,6 @@ import { UserEntity } from '../user/user.entity';
 @Module({
   imports: [
     JwtModule.register({}),
-    PrismaModule,
     HttpModule,
     TypeOrmModule.forFeature([UserEntity]),
   ],
