@@ -34,7 +34,7 @@ export class UserAddressController {
     @Headers() user,
     @Param() param,
   ): Promise<UserAddress> {
-    const user_id = user.user_id;
+    const user_id = user.userid;
     const address = parseInt(param.addressId);
     return this.userAddressService.updateUserAddress(reqBody, user_id, address);
   }
@@ -47,7 +47,7 @@ export class UserAddressController {
     @Body() reqBody: CreateAddressDto,
     @Headers() user,
   ): Promise<UserAddress> {
-    const user_id = user.user_id;
+    const user_id = user.userid;
     return this.userAddressService.createUserAddress(reqBody, user_id);
   }
 
@@ -55,7 +55,7 @@ export class UserAddressController {
   @Roles(UserRole.CONSUMER)
   @Get()
   getUserAddresses(@Headers() user): Promise<UserAddress[]> {
-    const user_id = user.user_id;
+    const user_id = user.userid;
     return this.userAddressService.getUserAddresses(user_id);
   }
 
@@ -66,7 +66,7 @@ export class UserAddressController {
     @Headers() user,
     @Param() param,
   ): Promise<{ deleted: true }> {
-    const user_id = user.user_id;
+    const user_id = user.userid;
     const address = parseInt(param.addressId);
     return this.userAddressService.deleteUserAddress(user_id, address);
   }
