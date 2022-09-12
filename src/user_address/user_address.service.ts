@@ -30,6 +30,7 @@ export class UserAddressService {
       .where({
         id: addressId,
         user_id: user_id,
+        is_active: true,
       })
       .returning('*')
       .execute();
@@ -46,7 +47,10 @@ export class UserAddressService {
 
   async getUserAddresses(user_id: string): Promise<UserAddress[]> {
     const userRepository = this.dataSource.getRepository(UserAddress);
-    return await userRepository.findBy({ user_id: user_id, is_active: true });
+    return await userRepository.findBy({
+      user_id: user_id,
+      is_active: true,
+    });
   }
 
   async deleteUserAddress(

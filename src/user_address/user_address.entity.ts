@@ -5,8 +5,8 @@ import { AddressType } from './enum/address.enum';
 @Entity({ name: 'addresses', schema: 'auth' })
 export class UserAddress {
   @ApiProperty()
-  @PrimaryGeneratedColumn('uuid')
-  id: number;
+  @PrimaryGeneratedColumn()
+  id: bigint;
 
   @Column()
   @ApiProperty()

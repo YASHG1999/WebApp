@@ -10,7 +10,8 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { AddressType } from '../enum/address.enum';
 
 export class CreateAddressDto {
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsString()
   name: string;
 
