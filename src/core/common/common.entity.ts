@@ -1,7 +1,7 @@
-import { Column, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
 export class CommonEntity {
-  @UpdateDateColumn()
+  @CreateDateColumn()
   created_at!: Date;
 
   @UpdateDateColumn()
