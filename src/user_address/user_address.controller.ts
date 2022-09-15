@@ -31,12 +31,11 @@ export class UserAddressController {
   @Patch('/:addressId')
   updateUserAddress(
     @Body() reqBody: UpdateAddressDto,
-    @Headers() headers,
+    @Headers('userId') userId: string,
     @Param() param,
   ): Promise<UserAddress> {
-    const user_id = headers.userId;
     const address = parseInt(param.addressId);
-    return this.userAddressService.updateUserAddress(reqBody, user_id, address);
+    return this.userAddressService.updateUserAddress(reqBody, userId, address);
   }
 
   @ApiBody({ type: CreateAddressDto })
@@ -45,29 +44,26 @@ export class UserAddressController {
   @Post()
   createUserAddress(
     @Body() reqBody: CreateAddressDto,
-    @Headers() headers,
+    @Headers('userId') userId: string,
   ): Promise<UserAddress> {
-    const user_id = headers.userId;
-    return this.userAddressService.createUserAddress(reqBody, user_id);
+    return this.userAddressService.createUserAddress(reqBody, userId);
   }
 
   @ApiResponse({ type: [UserAddress] })
   @Roles(UserRole.CONSUMER)
   @Get()
-  getUserAddresses(@Headers() headers): Promise<UserAddress[]> {
-    const user_id = headers.userId;
-    return this.userAddressService.getUserAddresses(user_id);
+  getUserAddresses(@Headers('userId') userId): Promise<UserAddress[]> {
+    return this.userAddressService.getUserAddresses(userId);
   }
 
   @Roles(UserRole.CONSUMER)
   @Delete('/:addressId')
   @ApiParam({ name: 'addressId', required: true })
   deleteUserAddresses(
-    @Headers() headers,
+    @Headers('userId') userId,
     @Param() param,
   ): Promise<{ deleted: true }> {
-    const user_id = headers.userId;
     const address = parseInt(param.addressId);
-    return this.userAddressService.deleteUserAddress(user_id, address);
+    return this.userAddressService.deleteUserAddress(userId, address);
   }
 }
