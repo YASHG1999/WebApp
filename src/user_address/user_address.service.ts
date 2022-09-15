@@ -72,7 +72,7 @@ export class UserAddressService {
 
     if (!address.raw[0]) {
       throw new HttpException(
-        { message: 'Address is not found or it is already deleted' },
+        { message: 'Address is not found' },
         HttpStatus.NOT_FOUND,
       );
     }

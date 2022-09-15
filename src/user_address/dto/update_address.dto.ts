@@ -54,6 +54,7 @@ export class UpdateAddressDto {
 
   @ApiPropertyOptional()
   @IsString()
+  @IsOptional()
   city: string;
 
   @ApiPropertyOptional()
@@ -65,10 +66,6 @@ export class UpdateAddressDto {
   @ApiPropertyOptional()
   @IsOptional()
   pincode: number;
-
-  @IsBoolean()
-  @ApiPropertyOptional()
-  is_active: boolean;
 
   @ApiPropertyOptional()
   @IsString()
