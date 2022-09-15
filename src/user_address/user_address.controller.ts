@@ -31,10 +31,10 @@ export class UserAddressController {
   @Patch('/:addressId')
   updateUserAddress(
     @Body() reqBody: UpdateAddressDto,
-    @Headers() user,
+    @Headers() headers,
     @Param() param,
   ): Promise<UserAddress> {
-    const user_id = user.userid;
+    const user_id = headers.userId;
     const address = parseInt(param.addressId);
     return this.userAddressService.updateUserAddress(reqBody, user_id, address);
   }
@@ -45,17 +45,17 @@ export class UserAddressController {
   @Post()
   createUserAddress(
     @Body() reqBody: CreateAddressDto,
-    @Headers() user,
+    @Headers() headers,
   ): Promise<UserAddress> {
-    const user_id = user.userid;
+    const user_id = headers.userId;
     return this.userAddressService.createUserAddress(reqBody, user_id);
   }
 
   @ApiResponse({ type: [UserAddress] })
   @Roles(UserRole.CONSUMER)
   @Get()
-  getUserAddresses(@Headers() user): Promise<UserAddress[]> {
-    const user_id = user.userid;
+  getUserAddresses(@Headers() headers): Promise<UserAddress[]> {
+    const user_id = headers.userId;
     return this.userAddressService.getUserAddresses(user_id);
   }
 
@@ -63,10 +63,10 @@ export class UserAddressController {
   @Delete('/:addressId')
   @ApiParam({ name: 'addressId', required: true })
   deleteUserAddresses(
-    @Headers() user,
+    @Headers() headers,
     @Param() param,
   ): Promise<{ deleted: true }> {
-    const user_id = user.userid;
+    const user_id = headers.userId;
     const address = parseInt(param.addressId);
     return this.userAddressService.deleteUserAddress(user_id, address);
   }
