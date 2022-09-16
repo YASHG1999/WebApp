@@ -13,7 +13,7 @@ export class UserAddressService {
     user_id: string,
   ): Promise<UserAddress> {
     const userRepository = this.dataSource.getRepository(UserAddress);
-    const body = { ...addressBody, user_id };
+    const body = { ...addressBody, user_id, is_active: true };
     return await userRepository.save(body);
   }
 
