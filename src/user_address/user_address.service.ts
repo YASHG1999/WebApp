@@ -13,7 +13,7 @@ export class UserAddressService {
     user_id: string,
   ): Promise<UserAddress> {
     const userRepository = this.dataSource.getRepository(UserAddress);
-    const body = { ...addressBody, user_id };
+    const body = { ...addressBody, user_id, is_active: true };
     return await userRepository.save(body);
   }
 
@@ -47,6 +47,8 @@ export class UserAddressService {
 
   async getUserAddresses(user_id: string): Promise<UserAddress[]> {
     const userRepository = this.dataSource.getRepository(UserAddress);
+    console.log(user_id);
+
     return await userRepository.findBy({
       user_id: user_id,
       is_active: true,

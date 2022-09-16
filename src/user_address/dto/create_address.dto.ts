@@ -61,11 +61,6 @@ export class CreateAddressDto {
   @IsOptional()
   pincode: number;
 
-  @IsBoolean()
-  @ApiProperty()
-  @IsOptional()
-  is_active: boolean;
-
   @ApiProperty()
   @IsString()
   @IsOptional()
