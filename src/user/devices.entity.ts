@@ -4,7 +4,7 @@ import { CommonEntity } from '../core/common/common.entity';
 @Entity({ name: 'devices', schema: 'auth' })
 export class DevicesEntity extends CommonEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: bigint;
+  id: string;
 
   @Column()
   otp: string;

@@ -41,8 +41,8 @@ export class AuthController {
   @ApiBody({ type: LogoutDto })
   @Roles(UserRole.VISITOR, UserRole.CONSUMER)
   @Post('logout')
-  logout(@Body() logoutDto: LogoutDto) {
-    const a = this.authService.logout(logoutDto);
+  logout(@Headers('userId') userId, @Body() logoutDto: LogoutDto) {
+    const a = this.authService.logout(userId, logoutDto);
     return a;
   }
 }

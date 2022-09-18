@@ -15,7 +15,6 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { AddUserDeviceDto } from './dto/add-userdevice.dto';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { UserDto } from './dto/user.dto';
-import { UpdateUserDeviceDto } from './dto/update-userdevice.dto';
 import { HttpExceptionFilter } from '../core/http-exception.filter';
 import { Roles } from 'src/core/common/custom.decorator';
 import { UserRole } from './enum/user.role';
@@ -80,13 +79,13 @@ export class UserController {
     return this.userService.getUserDevices(id);
   }
 
-  @Patch(':id/device-details/:device_id')
-  @Roles(UserRole.CONSUMER)
-  updateUserDevice(
-    @Param('id') id: string,
-    @Param('device_id') device_id: string,
-    @Body() dto: UpdateUserDeviceDto,
-  ) {
-    return this.userService.updateUserDevice(device_id, dto);
-  }
+  // @Patch(':id/device-details/:device_id')
+  // @Roles(UserRole.CONSUMER)
+  // updateUserDevice(
+  //   @Param('id') id: string,
+  //   @Param('device_id') device_id: string,
+  //   @Body() dto: UpdateUserDeviceDto,
+  // ) {
+  //   return this.userService.updateUserDevice(device_id, dto);
+  // }
 }

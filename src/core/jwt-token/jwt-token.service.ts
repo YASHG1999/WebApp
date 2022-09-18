@@ -10,12 +10,11 @@ export class JwtTokenService {
     private configService: ConfigService,
   ) {}
 
-  async getAccessToken(userId, userRole, defaultRole) {
+  async getAccessToken(userId, userRole) {
     const jwtPayload: JwtPayload = {
       iss: this.configService.get<string>('ISS'),
       userId: userId,
       roles: userRole,
-      defaultRole: defaultRole,
     };
 
     const accessToken = await this.jwtService.signAsync(jwtPayload, {
@@ -26,12 +25,11 @@ export class JwtTokenService {
     return accessToken;
   }
 
-  async getRefreshToken(userId, userRole, defaultRole) {
+  async getRefreshToken(userId, userRole) {
     const jwtPayload: JwtPayload = {
       iss: this.configService.get<string>('ISS'),
       userId: userId,
       roles: userRole,
-      defaultRole: defaultRole,
     };
 
     const refreshToken = await this.jwtService.signAsync(jwtPayload, {
@@ -42,10 +40,10 @@ export class JwtTokenService {
     return refreshToken;
   }
 
-  async getTokens(userId, userRole, defaultRole) {
+  async getTokens(userId, userRole) {
     return {
-      access_token: await this.getAccessToken(userId, userRole, defaultRole),
-      refresh_token: await this.getRefreshToken(userId, userRole, defaultRole),
+      access_token: await this.getAccessToken(userId, userRole),
+      refresh_token: await this.getRefreshToken(userId, userRole),
     };
   }
 
@@ -55,5 +53,11 @@ export class JwtTokenService {
     ) as JwtPayload;
 
     return decodedJwtAccessToken;
+  }
+
+  async verifyJwt(token: string) {
+    return await this.jwtService.verify(token, {
+      secret: this.configService.get<string>('RT_SECRET'),
+    });
   }
 }
