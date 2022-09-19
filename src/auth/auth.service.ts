@@ -146,11 +146,12 @@ export class AuthService {
       verifyOtpDto.phone_number,
     );
 
-    if (requiredRole && user?.roles?.indexOf(UserRole[requiredRole]) < 0) {
-      throw new HttpException(
-        { message: 'Access forbidden' },
-        HttpStatus.FORBIDDEN,
-      );
+    if (requiredRole) {
+      if (!user || user.roles.indexOf(UserRole[requiredRole]) < 0)
+        throw new HttpException(
+          { message: 'Access forbidden' },
+          HttpStatus.FORBIDDEN,
+        );
     }
 
     if (user == null) {
