@@ -31,6 +31,18 @@ export class AuthController {
     return aa;
   }
 
+  @ApiBody({ type: OtpDto })
+  @Post('admin/otp')
+  otpAdmin(@Body() otpDto: OtpDto) {
+    return this.authService.generateOtp(null, otpDto);
+  }
+
+  @ApiBody({ type: VerifyOtpDto })
+  @Post('admin/verify-otp')
+  verifyOtpAdmin(@Body() verifyOtpDto: VerifyOtpDto) {
+    return this.authService.verifyOtp(verifyOtpDto, 'ADMIN');
+  }
+
   @ApiBody({ type: RefreshTokenDto })
   @Post('refresh')
   token(@Body() refreshToken: RefreshTokenDto) {

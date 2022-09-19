@@ -28,7 +28,7 @@ export class AuthService {
     private dataSource: DataSource,
   ) {}
 
-  async generateOtp(userId: string, otpDto: OtpDto) {
+  async generateOtp(userId, otpDto: OtpDto) {
     const otpTokensRepository = this.dataSource.getRepository(OtpTokensEntity);
     const userRepository = this.dataSource.getRepository(UserEntity);
 
@@ -105,7 +105,7 @@ export class AuthService {
     };
   }
 
-  async verifyOtp(verifyOtpDto: VerifyOtpDto) {
+  async verifyOtp(verifyOtpDto: VerifyOtpDto, requiredRole?: string) {
     const otpTokensRepository = this.dataSource.getRepository(OtpTokensEntity);
     const userRepository = this.dataSource.getRepository(UserEntity);
     const refreshTokenRepository =
@@ -145,6 +145,13 @@ export class AuthService {
     let user = await this.userService.getUserFromPhone(
       verifyOtpDto.phone_number,
     );
+
+    if (requiredRole && user?.roles?.indexOf(UserRole[requiredRole]) < 0) {
+      throw new HttpException(
+        { message: 'Access forbidden' },
+        HttpStatus.FORBIDDEN,
+      );
+    }
 
     if (user == null) {
       user = await userRepository.save({
