@@ -11,6 +11,10 @@ import { AddressType } from '../enum/address.enum';
 
 export class UpdateAddressDto {
   @ApiPropertyOptional()
+  @IsOptional()
+  id: bigint;
+
+  @ApiPropertyOptional()
   @IsString()
   @IsOptional()
   name: string;
