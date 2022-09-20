@@ -1,7 +1,7 @@
 import { DataSource } from 'typeorm';
 import { CreateAddressDto } from './dto/create_address.dto';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { UserAddress } from './user_address.entity';
+import { UserAddressEntity } from './user_address.entity';
 import { UpdateAddressDto } from './dto/update_address.dto';
 
 @Injectable()
@@ -11,8 +11,8 @@ export class UserAddressService {
   async createUserAddress(
     addressBody: CreateAddressDto,
     user_id: string,
-  ): Promise<UserAddress> {
-    const userRepository = this.dataSource.getRepository(UserAddress);
+  ): Promise<UserAddressEntity> {
+    const userRepository = this.dataSource.getRepository(UserAddressEntity);
     const body = { ...addressBody, user_id, is_active: true };
     return await userRepository.save(body);
   }
@@ -21,12 +21,12 @@ export class UserAddressService {
     addressBody: UpdateAddressDto,
     user_id: string,
     addressId: number,
-  ): Promise<UserAddress> {
-    const userRepository = this.dataSource.getRepository(UserAddress);
+  ): Promise<UserAddressEntity> {
+    const userRepository = this.dataSource.getRepository(UserAddressEntity);
 
     const address = await userRepository
       .createQueryBuilder()
-      .update({ ...addressBody })
+      .update({ ...addressBody, is_active: false })
       .where({
         id: addressId,
         user_id: user_id,
@@ -35,6 +35,13 @@ export class UserAddressService {
       .returning('*')
       .execute();
 
+    address.raw.map((el) => {
+      delete el.id;
+      delete el.updated_at;
+      delete el.created_at;
+      el.is_active = true;
+    });
+
     if (!address.raw[0]) {
       throw new HttpException(
         { message: 'Address is not found' },
@@ -42,11 +49,11 @@ export class UserAddressService {
       );
     }
 
-    return address.raw[0];
+    return await userRepository.save(address.raw[0]);
   }
 
-  async getUserAddresses(user_id: string): Promise<UserAddress[]> {
-    const userRepository = this.dataSource.getRepository(UserAddress);
+  async getUserAddresses(user_id: string): Promise<UserAddressEntity[]> {
+    const userRepository = this.dataSource.getRepository(UserAddressEntity);
     return await userRepository.findBy({
       user_id: user_id,
       is_active: true,
@@ -57,7 +64,7 @@ export class UserAddressService {
     user_id: string,
     addressId: number,
   ): Promise<{ deleted: true }> {
-    const userRepository = this.dataSource.getRepository(UserAddress);
+    const userRepository = this.dataSource.getRepository(UserAddressEntity);
 
     const address = await userRepository
       .createQueryBuilder()

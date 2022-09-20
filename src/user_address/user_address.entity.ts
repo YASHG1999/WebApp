@@ -1,9 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { AddressType } from './enum/address.enum';
 
 @Entity({ name: 'addresses', schema: 'auth' })
-export class UserAddress {
+export class UserAddressEntity {
   @ApiProperty()
   @PrimaryGeneratedColumn()
   id: bigint;
@@ -12,7 +17,7 @@ export class UserAddress {
   @ApiProperty()
   user_id: string;
 
-  @Column()
+  @Column({ nullable: true })
   @ApiProperty()
   name: string;
 
@@ -23,11 +28,11 @@ export class UserAddress {
   @ApiProperty()
   type: AddressType;
 
-  @Column()
+  @Column('double precision')
   @ApiProperty()
   lat: number;
 
-  @Column()
+  @Column('double precision')
   @ApiProperty()
   long: number;
 
@@ -40,23 +45,23 @@ export class UserAddress {
   address_line_1: string;
 
   @ApiPropertyOptional()
-  @Column({ default: null })
+  @Column({ nullable: true })
   address_line_2: string;
 
   @ApiPropertyOptional()
-  @Column()
+  @Column({ nullable: true })
   landmark: string;
 
   @ApiPropertyOptional()
-  @Column()
+  @Column({ nullable: true })
   city: string;
 
   @ApiPropertyOptional()
-  @Column()
+  @Column({ nullable: true })
   state: string;
 
   @ApiPropertyOptional()
-  @Column()
+  @Column({ nullable: true })
   pincode: number;
 
   @ApiPropertyOptional()
@@ -64,14 +69,16 @@ export class UserAddress {
   is_active: boolean;
 
   @ApiPropertyOptional()
-  @Column()
+  @Column({ nullable: true })
   contact_number: string;
 
   @ApiProperty()
-  @Column()
+  @Column('timestamp with time zone', {
+    default: () => 'now()',
+  })
   created_at: Date;
 
   @ApiProperty()
-  @Column()
+  @UpdateDateColumn()
   updated_at: Date;
 }
