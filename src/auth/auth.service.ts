@@ -11,7 +11,7 @@ import { UserRole } from '../user/enum/user.role';
 import { HttpService } from '@nestjs/axios';
 import { SmsService } from '../core/sms/sms.service';
 import { UserEntity } from '../user/user.entity';
-import { DataSource } from 'typeorm';
+import { DataSource, MoreThan } from 'typeorm';
 import { OtpTokensEntity } from './otp-tokens.entity';
 import { RefreshTokenEntity } from './refresh-token.entity';
 import { add, isBefore } from 'date-fns';
@@ -48,7 +48,10 @@ export class AuthService {
     });
 
     let otpData = await otpTokensRepository.findOne({
-      where: { phone_number: otpDto.phone_number },
+      where: {
+        phone_number: otpDto.phone_number,
+        valid_till: MoreThan(new Date(Date.now())),
+      },
       order: { created_at: 'desc' },
     });
 

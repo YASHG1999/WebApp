@@ -33,7 +33,7 @@ export class OtpTokensEntity extends CommonEntity {
   @Column({ nullable: true })
   retries_count: number;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, default: 5 })
   retries_allowed: number;
 
   @ManyToOne(() => UserEntity)
