@@ -13,7 +13,12 @@ export class UserAddressService {
     user_id: string,
   ): Promise<UserAddressEntity> {
     const userRepository = this.dataSource.getRepository(UserAddressEntity);
-    const body = { ...addressBody, user_id, is_active: true };
+    const body = {
+      ...addressBody,
+      user_id,
+      is_active: true,
+      updated_by: user_id,
+    };
     return await userRepository.save(body);
   }
 
@@ -26,21 +31,16 @@ export class UserAddressService {
 
     const address = await userRepository
       .createQueryBuilder()
-      .update({ ...addressBody, is_active: false })
+      .update({ is_active: false })
       .where({
         id: addressId,
         user_id: user_id,
         is_active: true,
       })
-      .returning('*')
+      .returning(
+        'user_id, name, type, is_default, address_line_1, address_line_2, landmark, city, state, pincode, contact_number, lat, long',
+      )
       .execute();
-
-    address.raw.map((el) => {
-      delete el.id;
-      delete el.updated_at;
-      delete el.created_at;
-      el.is_active = true;
-    });
 
     if (!address.raw[0]) {
       throw new HttpException(
@@ -49,7 +49,12 @@ export class UserAddressService {
       );
     }
 
-    return await userRepository.save(address.raw[0]);
+    const updatedAddress = Object.assign(address.raw[0], addressBody);
+
+    return await userRepository.save({
+      ...updatedAddress,
+      updated_by: user_id,
+    });
   }
 
   async getUserAddresses(user_id: string): Promise<UserAddressEntity[]> {
