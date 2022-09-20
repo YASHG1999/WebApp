@@ -13,7 +13,12 @@ export class UserAddressService {
     user_id: string,
   ): Promise<UserAddressEntity> {
     const userRepository = this.dataSource.getRepository(UserAddressEntity);
-    const body = { ...addressBody, user_id, is_active: true };
+    const body = {
+      ...addressBody,
+      user_id,
+      is_active: true,
+      updated_by: user_id,
+    };
     return await userRepository.save(body);
   }
 
@@ -46,7 +51,10 @@ export class UserAddressService {
 
     const updatedAddress = Object.assign(address.raw[0], addressBody);
 
-    return await userRepository.save(updatedAddress);
+    return await userRepository.save({
+      ...updatedAddress,
+      updated_by: user_id,
+    });
   }
 
   async getUserAddresses(user_id: string): Promise<UserAddressEntity[]> {
