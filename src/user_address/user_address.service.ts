@@ -50,6 +50,7 @@ export class UserAddressService {
     }
 
     const updatedAddress = Object.assign(address.raw[0], addressBody);
+    delete updatedAddress.id;
 
     return await userRepository.save({
       ...updatedAddress,
