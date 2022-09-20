@@ -4,4 +4,4 @@ WORKDIR /auth-service/src/app
 COPY . .
 RUN npm install
 RUN npm run build
-CMD [ "node", "dist/main" ]
+CMD [ "node", "dist/src/main" ]

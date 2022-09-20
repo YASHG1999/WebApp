@@ -7,7 +7,6 @@ import { VerifyOtpDto } from './dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { LogoutDto } from './dto/logout.dto';
 import { JwtTokenService } from '../core/jwt-token/jwt-token.service';
-import { JwtPayload } from './types';
 import { UserRole } from '../user/enum/user.role';
 import { HttpService } from '@nestjs/axios';
 import { SmsService } from '../core/sms/sms.service';
@@ -16,34 +15,70 @@ import { DataSource } from 'typeorm';
 import { OtpTokensEntity } from './otp-tokens.entity';
 import { RefreshTokenEntity } from './refresh-token.entity';
 import { add, isBefore } from 'date-fns';
+import { DevicesEntity } from '../user/devices.entity';
+import { Config } from '../config/configuration';
 
 @Injectable()
 export class AuthService {
   constructor(
     private jwtTokenService: JwtTokenService,
-    private configService: ConfigService,
+    private configService: ConfigService<Config, true>,
     private userService: UserService,
     private httpService: HttpService,
     private smsService: SmsService,
     private dataSource: DataSource,
   ) {}
 
-  async generateOtp(userId: string, otpDto: OtpDto) {
+  async generateOtp(userId, otpDto: OtpDto) {
     const otpTokensRepository = this.dataSource.getRepository(OtpTokensEntity);
+    const userRepository = this.dataSource.getRepository(UserEntity);
 
     let otp = '123456';
 
-    if (this.configService.get<string>('NODE_ENV') != 'development') {
-      otp = generate(6, {
+    if (this.configService.get('appEnv') != 'development') {
+      otp = generate(this.configService.get('otp_digits'), {
         lowerCaseAlphabets: false,
         upperCaseAlphabets: false,
         specialChars: false,
       });
     }
 
+    const otp_valid_time = add(new Date(Date.now()), {
+      minutes: this.configService.get('otp_expiry_in_minutes'),
+    });
+
+    let otpData = await otpTokensRepository.findOne({
+      where: { phone_number: otpDto.phone_number },
+      order: { created_at: 'desc' },
+    });
+
+    // limit check on otp
+    if (otpData == null) {
+      otpData = await otpTokensRepository.save({
+        otp: otp,
+        phone_number: otpDto.phone_number,
+        user_id: userId,
+        valid_till: otp_valid_time,
+        retries_count: 0,
+      });
+    } else if (otpData.retries_count > otpData.retries_allowed) {
+      throw new HttpException(
+        { message: 'OTP retry count exceeded' },
+        HttpStatus.BAD_REQUEST,
+      );
+    } else {
+      otpData.otp = otp;
+      otpData.retries_count = otpData
+        ? otpData.retries_count
+          ? otpData.retries_count + 1
+          : 1
+        : 1;
+      otpData = await otpTokensRepository.save(otpData);
+    }
+
     const message = 'Please find your OTP for verification : ' + otp;
 
-    if (this.configService.get<string>('NODE_ENV') != 'development') {
+    if (this.configService.get<string>('appEnv') != 'development') {
       await this.smsService.sendOtpSmsTwilio(
         otpDto.country_code,
         otpDto.phone_number,
@@ -51,55 +86,46 @@ export class AuthService {
       );
     }
 
-    const otp_valid_time = add(new Date(Date.now()), {
-      minutes: this.configService.get<number>('OTP_EXPIRY_IN_MINUTES'),
-    });
-
-    const otpData = await otpTokensRepository.findOne({
+    const user = await userRepository.findOne({
       where: { phone_number: otpDto.phone_number },
-      order: { created_at: 'desc' },
     });
 
-    if (otpData == null) {
-      await otpTokensRepository.save({
-        otp: otp,
-        phone_number: otpDto.phone_number,
-        user_id: userId,
-        valid_till: otp_valid_time,
-        retries_count: 0,
-      });
-    } else {
-      otpData.otp = otp;
+    let isNewUserFlag = false;
 
-      otpData.retries_count = otpData
-        ? otpData.retries_count
-          ? otpData.retries_count + 1
-          : 1
-        : 1;
-
-      await otpTokensRepository.save(otpData);
+    if (user == null) {
+      isNewUserFlag = true;
     }
 
     return {
+      name: user == null ? null : user.name,
+      isNewUser: isNewUserFlag,
       success: true,
       message: 'otp sent successfully',
     };
   }
 
-  async verifyOtp(verifyOtpDto: VerifyOtpDto) {
+  async verifyOtp(verifyOtpDto: VerifyOtpDto, requiredRole?: string) {
     const otpTokensRepository = this.dataSource.getRepository(OtpTokensEntity);
     const userRepository = this.dataSource.getRepository(UserEntity);
     const refreshTokenRepository =
       this.dataSource.getRepository(RefreshTokenEntity);
 
+    //retry check, order by - updated_at
     const otpToken = await otpTokensRepository.findOne({
       where: { phone_number: verifyOtpDto.phone_number, otp: verifyOtpDto.otp },
-      order: { created_at: 'desc' },
+      order: { updated_at: 'desc' },
     });
 
     if (otpToken == null) {
       throw new HttpException(
         { message: 'OTP does not match' },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (otpToken.retries_count > otpToken.retries_allowed) {
+      throw new HttpException(
+        { message: 'OTP retry count exceeded' },
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -119,6 +145,14 @@ export class AuthService {
       verifyOtpDto.phone_number,
     );
 
+    if (requiredRole) {
+      if (!user || user.roles.indexOf(UserRole[requiredRole]) < 0)
+        throw new HttpException(
+          { message: 'Access forbidden' },
+          HttpStatus.FORBIDDEN,
+        );
+    }
+
     if (user == null) {
       user = await userRepository.save({
         id: otpToken.user_id,
@@ -127,11 +161,7 @@ export class AuthService {
       });
     }
 
-    const tokens = await this.jwtTokenService.getTokens(
-      user.id,
-      user.roles,
-      UserRole.CONSUMER,
-    );
+    const tokens = await this.jwtTokenService.getTokens(user.id, user.roles);
 
     await refreshTokenRepository.save({
       token: tokens.refresh_token,
@@ -146,29 +176,33 @@ export class AuthService {
       this.dataSource.getRepository(RefreshTokenEntity);
     const userRepository = this.dataSource.getRepository(UserEntity);
 
+    try {
+      await this.jwtTokenService.verifyJwt(refreshTokenDto.refresh_token);
+    } catch (e) {
+      throw new HttpException({ message: 'Refresh Token is Invalid' }, 469);
+    }
+
     const refreshToken = await refreshTokenRepository.findOne({
       where: { token: refreshTokenDto.refresh_token },
     });
 
-    const decodedJwt: JwtPayload = await this.jwtTokenService.decodeJwt(
-      refreshToken.token,
-    );
-
-    if (decodedJwt.exp < Date.now()) {
-      throw new HttpException({ message: 'Refresh Token has expired' }, 469);
+    if (refreshToken == null) {
+      throw new HttpException({ message: 'Refresh Token is Invalid' }, 469);
     }
 
     const user = await userRepository.findOne({
       where: { id: refreshToken.user_id },
     });
+    // user check
 
-    const tokens = await this.jwtTokenService.getTokens(
-      user.id,
-      user.roles,
-      (
-        await this.jwtTokenService.decodeJwt(refreshToken.token)
-      ).defaultRole,
-    );
+    const tokens = await this.jwtTokenService.getTokens(user.id, user.roles);
+
+    await refreshTokenRepository.delete({ id: refreshToken.id });
+
+    await refreshTokenRepository.save({
+      token: tokens.refresh_token,
+      user_id: user.id,
+    });
 
     return {
       access_token: tokens.access_token,
@@ -177,18 +211,23 @@ export class AuthService {
     };
   }
 
-  async logout(logoutDto: LogoutDto) {
+  async logout(userId, logoutDto: LogoutDto) {
     const refreshTokenRepository =
       this.dataSource.getRepository(RefreshTokenEntity);
 
-    await refreshTokenRepository.findOne({
-      where: { token: logoutDto.refresh_token },
+    const devicesRepository = this.dataSource.getRepository(DevicesEntity);
+
+    await refreshTokenRepository.delete({
+      token: logoutDto.refresh_token,
+      user_id: userId,
     });
 
-    await refreshTokenRepository.update(
-      { token: logoutDto.refresh_token },
-      { revoked: true },
+    await devicesRepository.update(
+      { device_id: logoutDto.device_id },
+      { is_active: false },
     );
+
+    // hard delete refresh token [user-check], mark device linked with user as inactive (soft delete)
 
     return {
       success: true,

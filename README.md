@@ -1,5 +1,6 @@
 # Auth Service
 ### Installation
+ADD CONFIGS
 
 ```bash
 $ npm install

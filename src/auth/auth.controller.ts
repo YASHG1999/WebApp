@@ -31,6 +31,18 @@ export class AuthController {
     return aa;
   }
 
+  @ApiBody({ type: OtpDto })
+  @Post('admin/otp')
+  otpAdmin(@Body() otpDto: OtpDto) {
+    return this.authService.generateOtp(null, otpDto);
+  }
+
+  @ApiBody({ type: VerifyOtpDto })
+  @Post('admin/verify-otp')
+  verifyOtpAdmin(@Body() verifyOtpDto: VerifyOtpDto) {
+    return this.authService.verifyOtp(verifyOtpDto, 'ADMIN');
+  }
+
   @ApiBody({ type: RefreshTokenDto })
   @Post('refresh')
   token(@Body() refreshToken: RefreshTokenDto) {
@@ -41,8 +53,8 @@ export class AuthController {
   @ApiBody({ type: LogoutDto })
   @Roles(UserRole.VISITOR, UserRole.CONSUMER)
   @Post('logout')
-  logout(@Body() logoutDto: LogoutDto) {
-    const a = this.authService.logout(logoutDto);
+  logout(@Headers('userId') userId, @Body() logoutDto: LogoutDto) {
+    const a = this.authService.logout(userId, logoutDto);
     return a;
   }
 }

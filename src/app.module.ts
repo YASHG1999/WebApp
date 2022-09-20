@@ -9,11 +9,14 @@ import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './core/guards/roles.guard';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserAddressModule } from './user_address/user_address.module';
+import configuration from './config/configuration';
+import { validate } from './config/env.validation';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true,
+      load: [configuration],
+      validate,
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],

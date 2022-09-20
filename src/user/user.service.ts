@@ -4,12 +4,11 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { AddUserDeviceDto } from './dto/add-userdevice.dto';
 import { JwtTokenService } from '../core/jwt-token/jwt-token.service';
 import { UserDto } from './dto/user.dto';
-import { UpdateUserDeviceDto } from './dto/update-userdevice.dto';
 import { UserEntity } from './user.entity';
 import { DataSource } from 'typeorm';
 import { RefreshTokenEntity } from '../auth/refresh-token.entity';
 import { DevicesEntity } from './devices.entity';
-import { UserRole } from './enum/user.role';
+import { UpdateUserDeviceDto } from './dto/update-userdevice.dto';
 
 @Injectable()
 export class UserService {
@@ -24,11 +23,7 @@ export class UserService {
       this.dataSource.getRepository(RefreshTokenEntity);
 
     const user = (await userRepository.save(dto)) as UserDto;
-    const tokens = await this.jwtTokenService.getTokens(
-      user.id,
-      user.roles,
-      UserRole.VISITOR,
-    );
+    const tokens = await this.jwtTokenService.getTokens(user.id, user.roles);
 
     await refreshTokenRepository.save({
       token: tokens.refresh_token,
@@ -70,18 +65,18 @@ export class UserService {
 
     if (addDeviceDto.device_id != null) {
       device = devicesRepository.findOne({
-        where: { device_id: addDeviceDto.device_id },
+        where: { device_id: addDeviceDto.device_id, is_active: true },
       });
     }
 
-    if (device == null) {
-      await devicesRepository.save(addDeviceDto);
-    } else {
-      await devicesRepository.update(
-        { device_id: addDeviceDto.device_id },
-        addDeviceDto,
-      );
+    if (device != null) {
+      device.is_active = false;
+      await devicesRepository.save(device);
     }
+
+    // mark as revoked old devices, create new everytime
+
+    await devicesRepository.save(addDeviceDto);
 
     return {
       success: true,
@@ -92,20 +87,22 @@ export class UserService {
   async getUserDevices(id: string) {
     const devicesRepository = this.dataSource.getRepository(DevicesEntity);
     const devices = devicesRepository.find({
-      where: { user_id: id },
+      where: { user_id: id, is_active: true },
     });
     return devices;
   }
 
   async updateUserDevice(
+    userId: string,
     device_id: string,
     updateUserDeviceDto: UpdateUserDeviceDto,
   ) {
     const devicesRepository = this.dataSource.getRepository(DevicesEntity);
     await devicesRepository.update(
-      { device_id: device_id },
+      { user_id: userId, device_id: device_id },
       updateUserDeviceDto,
     );
+    // would have to add find check
 
     return {
       success: true,

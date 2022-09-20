@@ -6,9 +6,9 @@ import { UserService } from '../user/user.service';
 import { JwtTokenService } from '../core/jwt-token/jwt-token.service';
 import { HttpModule } from '@nestjs/axios';
 import { SmsService } from '../core/sms/sms.service';
-import { CommonService } from '../core/common/common.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from '../user/user.entity';
+import { ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -22,7 +22,7 @@ import { UserEntity } from '../user/user.entity';
     UserService,
     JwtTokenService,
     SmsService,
-    CommonService,
+    ConfigService,
   ],
 })
 export class AuthModule {}
