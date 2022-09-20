@@ -1,41 +1,51 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+  Index,
+} from 'typeorm';
 import { CommonEntity } from '../core/common/common.entity';
+import { UserEntity } from './user.entity';
 
 @Entity({ name: 'devices', schema: 'auth' })
 export class DevicesEntity extends CommonEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
-  otp: string;
-
-  @Column()
+  @Index()
+  @Column('uuid', { nullable: true })
   user_id: string;
 
-  @Column()
+  @Column({ nullable: true })
   device_id: string;
 
-  @Column()
+  @Column('varchar', { length: 100, nullable: true })
   mac_address: string;
 
-  @Column()
+  @Column('varchar', { length: 100, nullable: true })
   manufacturer: string;
 
-  @Column()
+  @Column('varchar', { length: 100, nullable: true })
   model: string;
 
-  @Column()
+  @Column('varchar', { length: 100, nullable: true })
   os: string;
 
-  @Column()
+  @Column('varchar', { length: 20, nullable: true })
   app_version: string;
 
-  @Column()
+  @Column({ default: true })
   is_active: boolean;
 
-  @Column()
+  @Column({ nullable: true })
   last_refreshed_at: Date;
 
-  @Column()
+  @Column('varchar', { length: 255, nullable: true })
   notification_token: string;
+
+  @ManyToOne(() => UserEntity)
+  @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
+  user: UserEntity;
 }

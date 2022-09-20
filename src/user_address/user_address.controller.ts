@@ -16,7 +16,7 @@ import { UserRole } from 'src/user/enum/user.role';
 import { CreateAddressDto } from './dto/create_address.dto';
 import { UserAddressService } from './user_address.service';
 import { UpdateAddressDto } from './dto/update_address.dto';
-import { UserAddress } from './user_address.entity';
+import { UserAddressEntity } from './user_address.entity';
 
 @Controller('addresses')
 @ApiTags('User-Address')
@@ -25,7 +25,7 @@ export class UserAddressController {
   constructor(private userAddressService: UserAddressService) {}
 
   @ApiBody({ type: UpdateAddressDto })
-  @ApiResponse({ type: UserAddress })
+  @ApiResponse({ type: UserAddressEntity })
   @ApiParam({ name: 'addressId', required: true })
   @Roles(UserRole.CONSUMER)
   @Patch('/:addressId')
@@ -33,26 +33,26 @@ export class UserAddressController {
     @Body() reqBody: UpdateAddressDto,
     @Headers('userId') userId: string,
     @Param() param,
-  ): Promise<UserAddress> {
+  ): Promise<UserAddressEntity> {
     const address = parseInt(param.addressId);
     return this.userAddressService.updateUserAddress(reqBody, userId, address);
   }
 
   @ApiBody({ type: CreateAddressDto })
-  @ApiResponse({ type: UserAddress })
+  @ApiResponse({ type: UserAddressEntity })
   @Roles(UserRole.CONSUMER)
   @Post()
   createUserAddress(
     @Body() reqBody: CreateAddressDto,
     @Headers('userId') userId: string,
-  ): Promise<UserAddress> {
+  ): Promise<UserAddressEntity> {
     return this.userAddressService.createUserAddress(reqBody, userId);
   }
 
-  @ApiResponse({ type: [UserAddress] })
+  @ApiResponse({ type: [UserAddressEntity] })
   @Roles(UserRole.CONSUMER)
   @Get()
-  getUserAddresses(@Headers('userId') userId): Promise<UserAddress[]> {
+  getUserAddresses(@Headers('userId') userId): Promise<UserAddressEntity[]> {
     return this.userAddressService.getUserAddresses(userId);
   }
 

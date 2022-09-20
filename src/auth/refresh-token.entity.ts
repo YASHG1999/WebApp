@@ -1,20 +1,33 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+  Index,
+} from 'typeorm';
 import { CommonEntity } from '../core/common/common.entity';
+import { UserEntity } from '../user/user.entity';
 
 @Entity({ name: 'refresh_token', schema: 'auth' })
 export class RefreshTokenEntity extends CommonEntity {
   @PrimaryGeneratedColumn()
   id: bigint;
 
-  @Column()
+  @Column('varchar', { length: 1000, nullable: true })
   token: string;
 
-  @Column()
+  @Index()
+  @Column('uuid', { nullable: true })
   user_id: string;
 
-  @Column()
+  @Column({ nullable: true })
   valid_till: Date;
 
-  @Column()
+  @Column({ default: false })
   revoked: boolean;
+
+  @ManyToOne(() => UserEntity)
+  @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
+  user: UserEntity;
 }

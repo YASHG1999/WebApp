@@ -2,11 +2,11 @@ import { Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
 export class CommonEntity {
   @CreateDateColumn()
-  created_at!: Date;
+  created_at: Date;
 
   @UpdateDateColumn()
-  updated_at!: Date;
+  updated_at: Date;
 
-  @Column()
-  updated_by?: string;
+  @Column('uuid', { nullable: true })
+  updated_by: string;
 }

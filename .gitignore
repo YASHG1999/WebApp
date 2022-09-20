@@ -38,3 +38,4 @@ prisma/migrations
 data
 .env
 .env.prod
+migrations
