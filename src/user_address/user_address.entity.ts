@@ -1,14 +1,10 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 import { AddressType } from './enum/address.enum';
+import { CommonEntity } from '../core/common/common.entity';
 
 @Entity({ name: 'addresses', schema: 'auth' })
-export class UserAddressEntity {
+export class UserAddressEntity extends CommonEntity {
   @ApiProperty()
   @PrimaryGeneratedColumn()
   id: bigint;
@@ -23,7 +19,8 @@ export class UserAddressEntity {
 
   @Column({
     type: 'enum',
-    enum: ['Home', 'Work', 'Other'],
+    enum: AddressType,
+    default: AddressType.Other,
   })
   @ApiProperty()
   type: AddressType;
@@ -71,14 +68,4 @@ export class UserAddressEntity {
   @ApiPropertyOptional()
   @Column({ nullable: true })
   contact_number: string;
-
-  @ApiProperty()
-  @Column('timestamp with time zone', {
-    default: () => 'now()',
-  })
-  created_at: Date;
-
-  @ApiProperty()
-  @UpdateDateColumn()
-  updated_at: Date;
 }

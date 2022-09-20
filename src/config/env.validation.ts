@@ -35,6 +35,9 @@ export class EnvironmentVariables {
   OTP_EXPIRY_IN_MINUTES?: number;
 
   @Expose()
+  OTP_DIGITS?: number;
+
+  @Expose()
   ISS?: string;
 }
 

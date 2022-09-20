@@ -35,10 +35,8 @@ export class AuthService {
 
     let otp = '123456';
 
-    if (this.configService.get<string>('appEnv') != 'development') {
-      // TRY 4
-      otp = generate(6, {
-        // DIGITS IN ENV, add config first
+    if (this.configService.get('appEnv') != 'development') {
+      otp = generate(this.configService.get('otp_digits'), {
         lowerCaseAlphabets: false,
         upperCaseAlphabets: false,
         specialChars: false,
@@ -46,7 +44,7 @@ export class AuthService {
     }
 
     const otp_valid_time = add(new Date(Date.now()), {
-      minutes: this.configService.get<number>('otp_expiry_in_minutes'),
+      minutes: this.configService.get('otp_expiry_in_minutes'),
     });
 
     let otpData = await otpTokensRepository.findOne({
