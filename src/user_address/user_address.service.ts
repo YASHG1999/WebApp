@@ -37,13 +37,6 @@ export class UserAddressService {
       )
       .execute();
 
-    address.raw.map((el) => {
-      delete el.id;
-      delete el.updated_at;
-      delete el.created_at;
-      el.is_active = true;
-    });
-
     if (!address.raw[0]) {
       throw new HttpException(
         { message: 'Address is not found' },
