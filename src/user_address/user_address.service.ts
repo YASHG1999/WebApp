@@ -26,13 +26,15 @@ export class UserAddressService {
 
     const address = await userRepository
       .createQueryBuilder()
-      .update({ ...addressBody })
+      .update({ is_active: false })
       .where({
         id: addressId,
         user_id: user_id,
         is_active: true,
       })
-      .returning('*')
+      .returning(
+        'user_id, name, type, is_default, address_line_1, address_line_2, landmark, city, state, pincode, contact_number, lat, long',
+      )
       .execute();
 
     if (!address.raw[0]) {
@@ -42,7 +44,9 @@ export class UserAddressService {
       );
     }
 
-    return address.raw[0];
+    const updatedAddress = Object.assign(address.raw[0], addressBody);
+
+    return await userRepository.save(updatedAddress);
   }
 
   async getUserAddresses(user_id: string): Promise<UserAddress[]> {
