@@ -8,6 +8,7 @@ import { UserEntity } from './user.entity';
 import { DataSource } from 'typeorm';
 import { RefreshTokenEntity } from '../auth/refresh-token.entity';
 import { DevicesEntity } from './devices.entity';
+import { UpdateUserDeviceDto } from './dto/update-userdevice.dto';
 
 @Injectable()
 export class UserService {
@@ -91,22 +92,23 @@ export class UserService {
     return devices;
   }
 
-  // async updateUserDevice(
-  //   // deprecate this
-  //   device_id: string,
-  //   updateUserDeviceDto: UpdateUserDeviceDto,
-  // ) {
-  //   const devicesRepository = this.dataSource.getRepository(DevicesEntity);
-  //   await devicesRepository.update(
-  //     { device_id: device_id },
-  //     updateUserDeviceDto,
-  //   );
-  //
-  //   return {
-  //     success: true,
-  //     message: 'Details added successfully',
-  //   };
-  // }
+  async updateUserDevice(
+    userId: string,
+    device_id: string,
+    updateUserDeviceDto: UpdateUserDeviceDto,
+  ) {
+    const devicesRepository = this.dataSource.getRepository(DevicesEntity);
+    await devicesRepository.update(
+      { user_id: userId, device_id: device_id },
+      updateUserDeviceDto,
+    );
+    // would have to add find check
+
+    return {
+      success: true,
+      message: 'Details added successfully',
+    };
+  }
 
   //admin
   // async getAllUsers(pageNo: number, limit: number) {

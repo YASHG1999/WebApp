@@ -16,12 +16,13 @@ import { OtpTokensEntity } from './otp-tokens.entity';
 import { RefreshTokenEntity } from './refresh-token.entity';
 import { add, isBefore } from 'date-fns';
 import { DevicesEntity } from '../user/devices.entity';
+import { Config } from '../config/configuration';
 
 @Injectable()
 export class AuthService {
   constructor(
     private jwtTokenService: JwtTokenService,
-    private configService: ConfigService,
+    private configService: ConfigService<Config, true>,
     private userService: UserService,
     private httpService: HttpService,
     private smsService: SmsService,
@@ -34,7 +35,7 @@ export class AuthService {
 
     let otp = '123456';
 
-    if (this.configService.get<string>('NODE_ENV') != 'development') {
+    if (this.configService.get<string>('appEnv') != 'development') {
       // TRY 4
       otp = generate(6, {
         // DIGITS IN ENV, add config first
@@ -45,7 +46,7 @@ export class AuthService {
     }
 
     const otp_valid_time = add(new Date(Date.now()), {
-      minutes: this.configService.get<number>('OTP_EXPIRY_IN_MINUTES'),
+      minutes: this.configService.get<number>('otp_expiry_in_minutes'),
     });
 
     let otpData = await otpTokensRepository.findOne({
@@ -79,7 +80,7 @@ export class AuthService {
 
     const message = 'Please find your OTP for verification : ' + otp;
 
-    if (this.configService.get<string>('NODE_ENV') != 'development') {
+    if (this.configService.get<string>('appEnv') != 'development') {
       await this.smsService.sendOtpSmsTwilio(
         otpDto.country_code,
         otpDto.phone_number,

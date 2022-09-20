@@ -16,5 +16,4 @@ export default new DataSource({
   entities: [UserEntity, OtpTokensEntity, RefreshTokenEntity, DevicesEntity],
   migrations: ['migrations/*'],
   migrationsTableName: 'auth.auth_migration',
-  synchronize: false,
 });

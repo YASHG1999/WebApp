@@ -35,4 +35,9 @@ export class AddUserDeviceDto {
     description: 'version of the app installed',
   })
   app_version?: string;
+
+  @ApiProperty({
+    description: 'notification token for the linked device',
+  })
+  notification_token: string;
 }
