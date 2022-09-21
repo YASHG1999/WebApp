@@ -52,7 +52,7 @@ export class AuthService {
       minutes: this.configService.get('otp_expiry_in_minutes'),
     });
 
-    let otpData = await otpTokensRepository.findOne({
+    const otpData = await this.otpTokensRepository.findOne({
       where: {
         phone_number: otpDto.phone_number,
         valid_till: MoreThan(new Date(Date.now())),
