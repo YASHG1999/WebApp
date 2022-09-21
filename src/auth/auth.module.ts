@@ -9,12 +9,20 @@ import { SmsService } from '../core/sms/sms.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from '../user/user.entity';
 import { ConfigService } from '@nestjs/config';
+import { RefreshTokenEntity } from './refresh-token.entity';
+import { OtpTokensEntity } from './otp-tokens.entity';
+import { DevicesEntity } from '../user/devices.entity';
 
 @Module({
   imports: [
     JwtModule.register({}),
     HttpModule,
-    TypeOrmModule.forFeature([UserEntity]),
+    TypeOrmModule.forFeature([
+      UserEntity,
+      RefreshTokenEntity,
+      OtpTokensEntity,
+      DevicesEntity,
+    ]),
   ],
   controllers: [AuthController],
   providers: [

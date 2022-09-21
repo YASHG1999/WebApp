@@ -30,7 +30,7 @@ export class OtpTokensEntity extends CommonEntity {
   @Column({ nullable: true })
   sent_at: Date;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, default: 5 })
   retries_count: number;
 
   @Column({ nullable: true })

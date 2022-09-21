@@ -44,6 +44,9 @@ export class UserEntity extends CommonEntity {
   @Column({ default: true })
   is_active: boolean;
 
+  @Column({ default: false })
+  is_verified: boolean;
+
   @Column({ nullable: true })
   banned_until: Date;
 
