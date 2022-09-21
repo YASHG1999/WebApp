@@ -11,7 +11,7 @@ import { UserRole } from '../user/enum/user.role';
 import { HttpService } from '@nestjs/axios';
 import { SmsService } from '../core/sms/sms.service';
 import { UserEntity } from '../user/user.entity';
-import { Repository } from 'typeorm';
+import { Repository, MoreThan } from 'typeorm';
 import { OtpTokensEntity } from './otp-tokens.entity';
 import { RefreshTokenEntity } from './refresh-token.entity';
 import { add, isBefore } from 'date-fns';
@@ -52,8 +52,11 @@ export class AuthService {
       minutes: this.configService.get('otp_expiry_in_minutes'),
     });
 
-    const otpData = await this.otpTokensRepository.findOne({
-      where: { phone_number: otpDto.phone_number },
+    let otpData = await otpTokensRepository.findOne({
+      where: {
+        phone_number: otpDto.phone_number,
+        valid_till: MoreThan(new Date(Date.now())),
+      },
       order: { created_at: 'desc' },
     });
 
