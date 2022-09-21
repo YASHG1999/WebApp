@@ -11,12 +11,13 @@ import { UserRole } from '../user/enum/user.role';
 import { HttpService } from '@nestjs/axios';
 import { SmsService } from '../core/sms/sms.service';
 import { UserEntity } from '../user/user.entity';
-import { DataSource, MoreThan } from 'typeorm';
+import { Repository, MoreThan } from 'typeorm';
 import { OtpTokensEntity } from './otp-tokens.entity';
 import { RefreshTokenEntity } from './refresh-token.entity';
 import { add, isBefore } from 'date-fns';
 import { DevicesEntity } from '../user/devices.entity';
 import { Config } from '../config/configuration';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class AuthService {
@@ -26,13 +27,17 @@ export class AuthService {
     private userService: UserService,
     private httpService: HttpService,
     private smsService: SmsService,
-    private dataSource: DataSource,
+    @InjectRepository(UserEntity)
+    private readonly userRepository: Repository<UserEntity>,
+    @InjectRepository(OtpTokensEntity)
+    private readonly otpTokensRepository: Repository<OtpTokensEntity>,
+    @InjectRepository(RefreshTokenEntity)
+    private readonly refreshTokenRepository: Repository<RefreshTokenEntity>,
+    @InjectRepository(DevicesEntity)
+    private readonly devicesRepository: Repository<DevicesEntity>,
   ) {}
 
   async generateOtp(userId, otpDto: OtpDto) {
-    const otpTokensRepository = this.dataSource.getRepository(OtpTokensEntity);
-    const userRepository = this.dataSource.getRepository(UserEntity);
-
     let otp = '123456';
 
     if (this.configService.get('appEnv') != 'development') {
@@ -57,7 +62,7 @@ export class AuthService {
 
     // limit check on otp
     if (otpData == null) {
-      otpData = await otpTokensRepository.save({
+      await this.otpTokensRepository.save({
         otp: otp,
         phone_number: otpDto.phone_number,
         user_id: userId,
@@ -76,7 +81,7 @@ export class AuthService {
           ? otpData.retries_count + 1
           : 1
         : 1;
-      otpData = await otpTokensRepository.save(otpData);
+      await this.otpTokensRepository.save(otpData);
     }
 
     const message = 'Please find your OTP for verification : ' + otp;
@@ -89,7 +94,8 @@ export class AuthService {
       );
     }
 
-    const user = await userRepository.findOne({
+    // SHOULD WE GET NEW USER FLAG FOR UNVERIFIED CONSUMER
+    const user = await this.userRepository.findOne({
       where: { phone_number: otpDto.phone_number },
     });
 
@@ -108,13 +114,8 @@ export class AuthService {
   }
 
   async verifyOtp(verifyOtpDto: VerifyOtpDto, requiredRole?: string) {
-    const otpTokensRepository = this.dataSource.getRepository(OtpTokensEntity);
-    const userRepository = this.dataSource.getRepository(UserEntity);
-    const refreshTokenRepository =
-      this.dataSource.getRepository(RefreshTokenEntity);
-
     //retry check, order by - updated_at
-    const otpToken = await otpTokensRepository.findOne({
+    const otpToken = await this.otpTokensRepository.findOne({
       where: { phone_number: verifyOtpDto.phone_number, otp: verifyOtpDto.otp },
       order: { updated_at: 'desc' },
     });
@@ -140,7 +141,7 @@ export class AuthService {
       );
     }
 
-    await otpTokensRepository.delete({
+    await this.otpTokensRepository.delete({
       phone_number: verifyOtpDto.phone_number,
     });
 
@@ -157,16 +158,20 @@ export class AuthService {
     }
 
     if (user == null) {
-      user = await userRepository.save({
+      user = await this.userRepository.save({
         id: otpToken.user_id,
         phone_number: verifyOtpDto.phone_number,
         roles: [UserRole.VISITOR, UserRole.CONSUMER],
+        is_verified: true,
       });
+    } else if (user.is_verified == false) {
+      user.is_verified = true;
+      user = await this.userRepository.save(user);
     }
 
     const tokens = await this.jwtTokenService.getTokens(user.id, user.roles);
 
-    await refreshTokenRepository.save({
+    await this.refreshTokenRepository.save({
       token: tokens.refresh_token,
       user_id: user.id,
     });
@@ -175,17 +180,13 @@ export class AuthService {
   }
 
   async useRefreshToken(refreshTokenDto: RefreshTokenDto) {
-    const refreshTokenRepository =
-      this.dataSource.getRepository(RefreshTokenEntity);
-    const userRepository = this.dataSource.getRepository(UserEntity);
-
     try {
       await this.jwtTokenService.verifyJwt(refreshTokenDto.refresh_token);
     } catch (e) {
       throw new HttpException({ message: 'Refresh Token is Invalid' }, 469);
     }
 
-    const refreshToken = await refreshTokenRepository.findOne({
+    const refreshToken = await this.refreshTokenRepository.findOne({
       where: { token: refreshTokenDto.refresh_token },
     });
 
@@ -193,16 +194,16 @@ export class AuthService {
       throw new HttpException({ message: 'Refresh Token is Invalid' }, 469);
     }
 
-    const user = await userRepository.findOne({
+    const user = await this.userRepository.findOne({
       where: { id: refreshToken.user_id },
     });
     // user check
 
     const tokens = await this.jwtTokenService.getTokens(user.id, user.roles);
 
-    await refreshTokenRepository.delete({ id: refreshToken.id });
+    await this.refreshTokenRepository.delete({ id: refreshToken.id });
 
-    await refreshTokenRepository.save({
+    await this.refreshTokenRepository.save({
       token: tokens.refresh_token,
       user_id: user.id,
     });
@@ -215,17 +216,12 @@ export class AuthService {
   }
 
   async logout(userId, logoutDto: LogoutDto) {
-    const refreshTokenRepository =
-      this.dataSource.getRepository(RefreshTokenEntity);
-
-    const devicesRepository = this.dataSource.getRepository(DevicesEntity);
-
-    await refreshTokenRepository.delete({
+    await this.refreshTokenRepository.delete({
       token: logoutDto.refresh_token,
       user_id: userId,
     });
 
-    await devicesRepository.update(
+    await this.devicesRepository.update(
       { device_id: logoutDto.device_id },
       { is_active: false },
     );
