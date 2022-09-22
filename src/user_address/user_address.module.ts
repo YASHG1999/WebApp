@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserAddressEntity } from './user_address.entity';
 import { UserAddressService } from './user_address.service';
 import { UserAddressController } from './user_address.controller';
+import { UserAddressInternalController } from './user_address.internal.controller';
 
 @Module({
   imports: [
@@ -12,6 +13,6 @@ import { UserAddressController } from './user_address.controller';
     TypeOrmModule.forFeature([UserAddressEntity]),
   ],
   providers: [UserAddressService, CommonService],
-  controllers: [UserAddressController],
+  controllers: [UserAddressController, UserAddressInternalController],
 })
 export class UserAddressModule {}

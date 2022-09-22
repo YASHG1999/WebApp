@@ -92,4 +92,42 @@ export class UserAddressService {
 
     return { deleted: true };
   }
+
+  async createUserAddressInternal(
+    addressBody: CreateAddressDto,
+    user_id: string,
+  ): Promise<UserAddressEntity> {
+    const userRepository = this.dataSource.getRepository(UserAddressEntity);
+    const body = {
+      ...addressBody,
+      is_active: true,
+      updated_by: user_id,
+    };
+    return await userRepository.save(body);
+  }
+
+  async getUserAddressesInternal(
+    addressId: number,
+  ): Promise<UserAddressEntity> {
+    const userRepository = this.dataSource.getRepository(UserAddressEntity);
+
+    const address = await userRepository
+      .createQueryBuilder()
+      .update({ is_active: false })
+      .where({
+        id: addressId,
+        is_active: true,
+      })
+      .returning('*')
+      .execute();
+
+    if (!address.raw[0]) {
+      throw new HttpException(
+        { message: 'Address is not found' },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    return address.raw[0];
+  }
 }
