@@ -113,21 +113,19 @@ export class UserAddressService {
 
     const address = await userRepository
       .createQueryBuilder()
-      .update({ is_active: false })
       .where({
         id: addressId,
         is_active: true,
       })
-      .returning('*')
-      .execute();
+      .getOne();
 
-    if (!address.raw[0]) {
+    if (!address) {
       throw new HttpException(
         { message: 'Address is not found' },
         HttpStatus.NOT_FOUND,
       );
     }
 
-    return address.raw[0];
+    return address;
   }
 }
