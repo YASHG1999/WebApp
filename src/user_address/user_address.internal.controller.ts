@@ -23,7 +23,7 @@ export class UserAddressInternalController {
 
   @ApiBody({ type: CreateAddressInternalDto })
   @ApiResponse({ type: UserAddressEntity })
-  // @Roles(UserRole.INTERNAL)
+  @Roles(UserRole.INTERNAL)
   @Post()
   createUserAddressInternal(
     @Body() reqBody: CreateAddressInternalDto,
