@@ -19,7 +19,6 @@ import { HttpExceptionFilter } from '../core/http-exception.filter';
 import { Roles } from 'src/core/common/custom.decorator';
 import { UserRole } from './enum/user.role';
 import { UpdateUserDeviceDto } from './dto/update-userdevice.dto';
-import { InternalCreateUserDto } from './dto/internal-create-user.dto';
 
 @Controller('user')
 @ApiTags('User')
@@ -44,12 +43,6 @@ export class UserController {
   // }
 
   // user
-  @Post('internal/create')
-  @ApiBody({ type: InternalCreateUserDto })
-  internalCreateUser(@Body() internalCreateUserDto: InternalCreateUserDto) {
-    return this.userService.createInternalUser(internalCreateUserDto);
-  }
-
   @Post('/create')
   @ApiBody({ type: CreateUserDto })
   createUser(@Body() dto: CreateUserDto) {

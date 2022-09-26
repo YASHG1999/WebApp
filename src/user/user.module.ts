@@ -9,6 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { RefreshTokenEntity } from '../auth/refresh-token.entity';
 import { OtpTokensEntity } from '../auth/otp-tokens.entity';
 import { DevicesEntity } from './devices.entity';
+import { InternalUserController } from './user.internal.controller';
 
 @Module({
   imports: [
@@ -21,6 +22,6 @@ import { DevicesEntity } from './devices.entity';
     ]),
   ],
   providers: [UserService, JwtTokenService, ConfigService],
-  controllers: [UserController],
+  controllers: [UserController, InternalUserController],
 })
 export class UserModule {}
