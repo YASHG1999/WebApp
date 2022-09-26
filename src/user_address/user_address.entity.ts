@@ -25,17 +25,17 @@ export class UserAddressEntity extends CommonEntity {
   @ApiProperty()
   type: AddressType;
 
-  @Column('double precision')
-  @ApiProperty()
-  lat: number;
+  @Column('double precision', { nullable: true })
+  @ApiPropertyOptional()
+  lat?: number;
 
-  @Column('double precision')
-  @ApiProperty()
-  long: number;
+  @Column('double precision', { nullable: true })
+  @ApiPropertyOptional()
+  long?: number;
 
   @ApiPropertyOptional()
-  @Column({ default: null })
-  is_default: boolean;
+  @Column({ default: null, nullable: true })
+  is_default?: boolean;
 
   @ApiProperty()
   @Column()
@@ -68,4 +68,7 @@ export class UserAddressEntity extends CommonEntity {
   @ApiPropertyOptional()
   @Column({ nullable: true })
   contact_number: string;
+
+  @Column({ nullable: true, default: null })
+  lithos_ref: number;
 }

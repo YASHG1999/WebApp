@@ -40,4 +40,13 @@ export class UserAddressInternalController {
     const addressId = parseInt(params.addressId);
     return this.userAddressService.getUserAddressesInternal(addressId);
   }
+
+  @ApiResponse({ type: UserAddressEntity })
+  @ApiParam({ name: 'refId', required: true })
+  @Roles(UserRole.INTERNAL)
+  @Get('ref/:refId')
+  getUserAddressesByRefInternal(@Param() params): Promise<UserAddressEntity> {
+    const refId = parseInt(params.refId);
+    return this.userAddressService.getUserAddressesbyRefInternal(refId);
+  }
 }

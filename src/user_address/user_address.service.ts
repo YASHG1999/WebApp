@@ -1,8 +1,10 @@
 import { DataSource } from 'typeorm';
 import { CreateAddressDto } from './dto/create_address.dto';
+import { CreateAddressInternalDto } from './dto/create_address.internal.dto';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { UserAddressEntity } from './user_address.entity';
 import { UpdateAddressDto } from './dto/update_address.dto';
+import { AddressType } from './enum/address.enum';
 
 @Injectable()
 export class UserAddressService {
@@ -94,13 +96,14 @@ export class UserAddressService {
   }
 
   async createUserAddressInternal(
-    addressBody: CreateAddressDto,
+    addressBody: CreateAddressInternalDto,
     user_id: string,
   ): Promise<UserAddressEntity> {
     const userRepository = this.dataSource.getRepository(UserAddressEntity);
     const body = {
       ...addressBody,
-      is_active: true,
+      is_active: false,
+      type: AddressType.Other,
       updated_by: user_id,
     };
     return await userRepository.save(body);
@@ -122,6 +125,28 @@ export class UserAddressService {
     if (!address) {
       throw new HttpException(
         { message: 'Address is not found' },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    return address;
+  }
+
+  async getUserAddressesbyRefInternal(
+    refId: number,
+  ): Promise<UserAddressEntity> {
+    const userRepository = this.dataSource.getRepository(UserAddressEntity);
+
+    const address = await userRepository
+      .createQueryBuilder()
+      .where({
+        lithos_ref: refId,
+      })
+      .getOne();
+
+    if (!address) {
+      throw new HttpException(
+        { message: 'Ref not found' },
         HttpStatus.NOT_FOUND,
       );
     }
