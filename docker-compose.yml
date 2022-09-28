@@ -8,4 +8,4 @@ services:
             - DATABASE_URL=${DATABASE_URL}
             - AT_SECRET=${AT_SECRET}
             - RT_SECRET=${RT_SECRET}
-    	network_mode: host
+        network_mode: host
