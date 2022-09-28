@@ -8,5 +8,4 @@ services:
             - DATABASE_URL=${DATABASE_URL}
             - AT_SECRET=${AT_SECRET}
             - RT_SECRET=${RT_SECRET}
-        ports:
-            - "3000:3000"
+    	network_mode: host
