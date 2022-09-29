@@ -118,7 +118,6 @@ export class UserAddressService {
       .createQueryBuilder()
       .where({
         id: addressId,
-        is_active: true,
       })
       .getOne();
 
