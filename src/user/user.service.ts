@@ -26,6 +26,11 @@ export class UserService {
   ) {}
 
   async createInternalUser(internalCreateUserDto: InternalCreateUserDto) {
+    if (!internalCreateUserDto.phone_number)
+      return this.userRepository.save({
+        roles: [UserRole.VISITOR],
+      });
+
     let user = await this.userRepository.findOne({
       where: { phone_number: internalCreateUserDto.phone_number },
     });

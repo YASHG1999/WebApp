@@ -1,12 +1,13 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, Matches } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator';
 
 export class InternalCreateUserDto {
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'phone number of the user',
   })
   @IsNotEmpty()
   @IsString()
+  @IsOptional()
   @Matches(/^[6-9]\d{9}$/)
   phone_number: string;
 }
