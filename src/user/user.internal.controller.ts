@@ -8,7 +8,7 @@ import { InternalCreateUserDto } from './dto/internal-create-user.dto';
 
 @Controller('internal/user')
 @ApiTags('User - Internal')
-@Roles(UserRole.INTERNAL)
+@Roles(UserRole.INTERNAL, UserRole.ADMIN)
 @UseFilters(HttpExceptionFilter)
 export class InternalUserController {
   constructor(private userService: UserService) {}

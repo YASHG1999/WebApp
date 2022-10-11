@@ -68,6 +68,16 @@ export class UserAddressService {
     });
   }
 
+  async getUserAddressesByUserIdInternal(
+    user_id: string,
+  ): Promise<UserAddressEntity[]> {
+    const userRepository = this.dataSource.getRepository(UserAddressEntity);
+    return await userRepository.findBy({
+      user_id: user_id,
+      //is_active: true,
+    });
+  }
+
   async deleteUserAddress(
     user_id: string,
     addressId: number,

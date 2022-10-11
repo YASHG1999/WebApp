@@ -23,7 +23,7 @@ export class UserAddressInternalController {
 
   @ApiBody({ type: CreateAddressInternalDto })
   @ApiResponse({ type: UserAddressEntity })
-  @Roles(UserRole.INTERNAL)
+  @Roles(UserRole.INTERNAL, UserRole.ADMIN)
   @Post()
   createUserAddressInternal(
     @Body() reqBody: CreateAddressInternalDto,
@@ -39,6 +39,17 @@ export class UserAddressInternalController {
   getUserAddressesInternal(@Param() params): Promise<UserAddressEntity> {
     const addressId = parseInt(params.addressId);
     return this.userAddressService.getUserAddressesInternal(addressId);
+  }
+
+  @ApiResponse({ type: [UserAddressEntity] })
+  @ApiParam({ name: 'userId', required: true })
+  @Roles(UserRole.INTERNAL, UserRole.ADMIN)
+  @Get('/user/:userId')
+  getUserAddressesByUserIdInternal(
+    @Param() params,
+  ): Promise<UserAddressEntity[]> {
+    const userId = params.addressId;
+    return this.userAddressService.getUserAddressesByUserIdInternal(userId);
   }
 
   @ApiResponse({ type: UserAddressEntity })

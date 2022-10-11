@@ -11,8 +11,9 @@ export class CreateAddressInternalDto {
   @IsString()
   user_id: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsNumber()
+  @IsOptional()
   lithos_ref: number;
 
   @ApiProperty()
