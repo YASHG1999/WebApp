@@ -48,7 +48,7 @@ export class UserAddressInternalController {
   getUserAddressesByUserIdInternal(
     @Param() params,
   ): Promise<UserAddressEntity[]> {
-    const userId = params.addressId;
+    const userId = params.userId;
     return this.userAddressService.getUserAddressesByUserIdInternal(userId);
   }
 
