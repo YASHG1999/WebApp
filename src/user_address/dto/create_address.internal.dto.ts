@@ -25,6 +25,16 @@ export class CreateAddressInternalDto {
   @IsOptional()
   address_line_2: string;
 
+  @IsNumber()
+  @ApiPropertyOptional()
+  @IsOptional()
+  lat: number;
+
+  @IsNumber()
+  @ApiPropertyOptional()
+  @IsOptional()
+  long: number;
+
   @ApiPropertyOptional()
   @IsString()
   @IsOptional()
