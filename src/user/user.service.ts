@@ -74,7 +74,7 @@ export class UserService {
   async updateUser(id: string, updateUserDto: UpdateUserDto) {
     await this.userRepository.save({
       id: id,
-      name: updateUserDto.name,
+      ...updateUserDto,
     });
     return this.userRepository.findOne({ where: { id: id } });
   }
