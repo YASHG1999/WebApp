@@ -96,7 +96,7 @@ export class AuthService {
 
     // SHOULD WE GET NEW USER FLAG FOR UNVERIFIED CONSUMER
     const user = await this.userRepository.findOne({
-      where: { phone_number: otpDto.phone_number },
+      where: { phone_number: otpDto.phone_number, is_verified: true },
     });
 
     let isNewUserFlag = false;

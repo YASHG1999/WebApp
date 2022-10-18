@@ -9,6 +9,9 @@ export class UserEntity extends CommonEntity {
   id: string;
 
   @Column('varchar', { length: 100, nullable: true })
+  greeting: string;
+
+  @Column('varchar', { length: 100, nullable: true })
   name: string;
 
   @Column('varchar', { length: 5, nullable: true })
