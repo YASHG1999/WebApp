@@ -8,6 +8,8 @@ import {
   Patch,
   Post,
   UseFilters,
+  Headers,
+  Delete,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserService } from './user.service';
@@ -88,5 +90,12 @@ export class UserController {
     @Body() dto: UpdateUserDeviceDto,
   ) {
     return this.userService.updateUserDevice(userId, device_id, dto);
+  }
+
+  @Roles(UserRole.CONSUMER)
+  @Delete('delete')
+  deleteAccount(@Headers('userId') userId) {
+    const a = this.userService.deleteAccount(userId);
+    return a;
   }
 }

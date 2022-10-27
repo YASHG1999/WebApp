@@ -66,7 +66,7 @@ export class UserService {
 
   async getUserFromPhone(phone: string) {
     const user = await this.userRepository.findOne({
-      where: { phone_number: phone },
+      where: { phone_number: phone, is_deleted: false },
     });
     return user;
   }
@@ -123,6 +123,19 @@ export class UserService {
     return {
       success: true,
       message: 'Details added successfully',
+    };
+  }
+
+  async deleteAccount(userId) {
+    await this.refreshTokenRepository.delete({
+      user_id: userId,
+    });
+
+    await this.userRepository.update({ id: userId }, { is_deleted: true });
+
+    return {
+      success: true,
+      message: 'Your Account is deleted successfully',
     };
   }
 
