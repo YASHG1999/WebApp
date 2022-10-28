@@ -225,10 +225,10 @@ export class AuthService {
       user_id: userId,
     });
 
-    await this.devicesRepository.update(
-      { device_id: logoutDto.device_id },
-      { is_active: false },
-    );
+    // await this.devicesRepository.update(
+    //   { device_id: logoutDto.device_id },
+    //   { is_active: false },
+    // );
 
     // hard delete refresh token [user-check], mark device linked with user as inactive (soft delete)
 
