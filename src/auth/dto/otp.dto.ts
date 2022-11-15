@@ -21,5 +21,6 @@ export class OtpDto {
   @ApiProperty({
     description: 'firebase verification id',
   })
-  verificationId: string;
+  @IsOptional()
+  verificationId?: string;
 }
