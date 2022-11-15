@@ -11,7 +11,7 @@ import { UserRole } from '../user/enum/user.role';
 import { HttpService } from '@nestjs/axios';
 import { SmsService } from '../core/sms/sms.service';
 import { UserEntity } from '../user/user.entity';
-import { Repository, MoreThan } from 'typeorm';
+import { Repository, MoreThan, Not } from 'typeorm';
 import { OtpTokensEntity } from './otp-tokens.entity';
 import { RefreshTokenEntity } from './refresh-token.entity';
 import { add, isBefore } from 'date-fns';
@@ -38,149 +38,235 @@ export class AuthService {
   ) {}
 
   async generateOtp(userId, otpDto: OtpDto) {
-    let otp = '123456';
-
-    if (this.configService.get('appEnv') != 'development') {
-      otp = generate(this.configService.get('otp_digits'), {
-        lowerCaseAlphabets: false,
-        upperCaseAlphabets: false,
-        specialChars: false,
+    if (otpDto.verificationId != null) {
+      const otp_valid_time = add(new Date(Date.now()), {
+        minutes: this.configService.get('otp_expiry_in_minutes'),
       });
-    }
 
-    const otp_valid_time = add(new Date(Date.now()), {
-      minutes: this.configService.get('otp_expiry_in_minutes'),
-    });
-
-    const otpData = await this.otpTokensRepository.findOne({
-      where: {
-        phone_number: otpDto.phone_number,
-        valid_till: MoreThan(new Date(Date.now())),
-      },
-      order: { created_at: 'desc' },
-    });
-
-    // limit check on otp
-    if (otpData == null) {
       await this.otpTokensRepository.save({
-        otp: otp,
+        verification_type: 'FIREBASE',
+        verification_id: otpDto.verificationId,
         phone_number: otpDto.phone_number,
-        user_id: userId,
         valid_till: otp_valid_time,
+        user_id: userId,
         retries_count: 0,
       });
-    } else if (otpData.retries_count > otpData.retries_allowed) {
-      throw new HttpException(
-        { message: 'OTP retry count exceeded' },
-        HttpStatus.BAD_REQUEST,
-      );
+
+      const user = await this.userRepository.findOne({
+        where: {
+          phone_number: otpDto.phone_number,
+          is_verified: true,
+          is_deleted: false,
+        },
+      });
+
+      let isNewUserFlag = false;
+
+      if (user == null) {
+        isNewUserFlag = true;
+      }
+
+      return {
+        name: user == null ? null : user.name,
+        isNewUser: isNewUserFlag,
+        success: true,
+        message: 'otp sent successfully',
+      };
     } else {
-      otpData.otp = otp;
-      otpData.retries_count = otpData
-        ? otpData.retries_count
-          ? otpData.retries_count + 1
-          : 1
-        : 1;
-      await this.otpTokensRepository.save(otpData);
+      let otp = '123456';
+
+      if (this.configService.get('appEnv') != 'development') {
+        otp = generate(this.configService.get('otp_digits'), {
+          lowerCaseAlphabets: false,
+          upperCaseAlphabets: false,
+          specialChars: false,
+        });
+      }
+
+      const otp_valid_time = add(new Date(Date.now()), {
+        minutes: this.configService.get('otp_expiry_in_minutes'),
+      });
+
+      const otpData = await this.otpTokensRepository.findOne({
+        where: {
+          phone_number: otpDto.phone_number,
+          valid_till: MoreThan(new Date(Date.now())),
+        },
+        order: { created_at: 'desc' },
+      });
+
+      // limit check on otp
+      if (otpData == null) {
+        await this.otpTokensRepository.save({
+          verification_type: 'GUPSHUP',
+          otp: otp,
+          phone_number: otpDto.phone_number,
+          user_id: userId,
+          valid_till: otp_valid_time,
+          retries_count: 0,
+        });
+      } else if (otpData.retries_count > otpData.retries_allowed) {
+        throw new HttpException(
+          { message: 'OTP retry count exceeded' },
+          HttpStatus.BAD_REQUEST,
+        );
+      } else {
+        otpData.otp = otp;
+        otpData.retries_count = otpData
+          ? otpData.retries_count
+            ? otpData.retries_count + 1
+            : 1
+          : 1;
+        await this.otpTokensRepository.save(otpData);
+      }
+
+      const message = 'Please find your OTP for verification : ' + otp;
+
+      if (this.configService.get<string>('appEnv') != 'development') {
+        await this.smsService.sendOtpSmsTwilio(
+          otpDto.country_code,
+          otpDto.phone_number,
+          message,
+        );
+      }
+
+      // SHOULD WE GET NEW USER FLAG FOR UNVERIFIED CONSUMER
+      const user = await this.userRepository.findOne({
+        where: {
+          phone_number: otpDto.phone_number,
+          is_verified: true,
+          is_deleted: false,
+        },
+      });
+
+      let isNewUserFlag = false;
+
+      if (user == null) {
+        isNewUserFlag = true;
+      }
+
+      return {
+        name: user == null ? null : user.name,
+        isNewUser: isNewUserFlag,
+        success: true,
+        message: 'otp sent successfully',
+      };
     }
-
-    const message = 'Please find your OTP for verification : ' + otp;
-
-    if (this.configService.get<string>('appEnv') != 'development') {
-      await this.smsService.sendOtpSmsTwilio(
-        otpDto.country_code,
-        otpDto.phone_number,
-        message,
-      );
-    }
-
-    // SHOULD WE GET NEW USER FLAG FOR UNVERIFIED CONSUMER
-    const user = await this.userRepository.findOne({
-      where: {
-        phone_number: otpDto.phone_number,
-        is_verified: true,
-        is_deleted: false,
-      },
-    });
-
-    let isNewUserFlag = false;
-
-    if (user == null) {
-      isNewUserFlag = true;
-    }
-
-    return {
-      name: user == null ? null : user.name,
-      isNewUser: isNewUserFlag,
-      success: true,
-      message: 'otp sent successfully',
-    };
   }
 
   async verifyOtp(verifyOtpDto: VerifyOtpDto, requiredRole?: string) {
-    //retry check, order by - updated_at
-    const otpToken = await this.otpTokensRepository.findOne({
-      where: { phone_number: verifyOtpDto.phone_number, otp: verifyOtpDto.otp },
+    let otpToken = await this.otpTokensRepository.findOne({
+      where: {
+        phone_number: verifyOtpDto.phone_number,
+        verification_id: Not('null'),
+      },
       order: { updated_at: 'desc' },
     });
 
-    if (otpToken == null) {
-      throw new HttpException(
-        { message: 'OTP does not match' },
-        HttpStatus.BAD_REQUEST,
+    if (otpToken.verification_id != null) {
+      const status = await this.smsService.firebaseApiCall(
+        otpToken.verification_id,
+        verifyOtpDto.otp,
       );
-    }
-
-    if (otpToken.retries_count > otpToken.retries_allowed) {
-      throw new HttpException(
-        { message: 'OTP retry count exceeded' },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    if (isBefore(otpToken.valid_till, new Date(Date.now()))) {
-      throw new HttpException(
-        { message: 'OTP has expired' },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    await this.otpTokensRepository.delete({
-      phone_number: verifyOtpDto.phone_number,
-    });
-
-    let user = await this.userService.getUserFromPhone(
-      verifyOtpDto.phone_number,
-    );
-
-    if (requiredRole) {
-      if (!user || user.roles.indexOf(UserRole[requiredRole]) < 0)
+      if (status != 200) {
         throw new HttpException(
-          { message: 'Access forbidden' },
-          HttpStatus.FORBIDDEN,
+          { message: 'OTP does not match' },
+          HttpStatus.BAD_REQUEST,
         );
-    }
+      }
 
-    if (user == null) {
-      user = await this.userRepository.save({
-        id: otpToken.user_id,
-        phone_number: verifyOtpDto.phone_number,
-        roles: [UserRole.VISITOR, UserRole.CONSUMER],
-        is_verified: true,
+      let user = await this.userService.getUserFromPhone(
+        verifyOtpDto.phone_number,
+      );
+
+      if (user == null) {
+        user = await this.userRepository.save({
+          id: otpToken.user_id,
+          phone_number: verifyOtpDto.phone_number,
+          roles: [UserRole.VISITOR, UserRole.CONSUMER],
+          is_verified: true,
+        });
+      } else if (user.is_verified == false) {
+        user.is_verified = true;
+        user = await this.userRepository.save(user);
+      }
+
+      const tokens = await this.jwtTokenService.getTokens(user.id, user.roles);
+
+      await this.refreshTokenRepository.save({
+        token: tokens.refresh_token,
+        user_id: user.id,
       });
-    } else if (user.is_verified == false) {
-      user.is_verified = true;
-      user = await this.userRepository.save(user);
+
+      return { ...tokens, user };
+    } else {
+      //retry check, order by - updated_at
+      otpToken = await this.otpTokensRepository.findOne({
+        where: {
+          phone_number: verifyOtpDto.phone_number,
+          otp: verifyOtpDto.otp,
+        },
+        order: { updated_at: 'desc' },
+      });
+
+      if (otpToken == null) {
+        throw new HttpException(
+          { message: 'OTP does not match' },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      if (otpToken.retries_count > otpToken.retries_allowed) {
+        throw new HttpException(
+          { message: 'OTP retry count exceeded' },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      if (isBefore(otpToken.valid_till, new Date(Date.now()))) {
+        throw new HttpException(
+          { message: 'OTP has expired' },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      await this.otpTokensRepository.delete({
+        phone_number: verifyOtpDto.phone_number,
+      });
+
+      let user = await this.userService.getUserFromPhone(
+        verifyOtpDto.phone_number,
+      );
+
+      if (requiredRole) {
+        if (!user || user.roles.indexOf(UserRole[requiredRole]) < 0)
+          throw new HttpException(
+            { message: 'Access forbidden' },
+            HttpStatus.FORBIDDEN,
+          );
+      }
+
+      if (user == null) {
+        user = await this.userRepository.save({
+          id: otpToken.user_id,
+          phone_number: verifyOtpDto.phone_number,
+          roles: [UserRole.VISITOR, UserRole.CONSUMER],
+          is_verified: true,
+        });
+      } else if (user.is_verified == false) {
+        user.is_verified = true;
+        user = await this.userRepository.save(user);
+      }
+
+      const tokens = await this.jwtTokenService.getTokens(user.id, user.roles);
+
+      await this.refreshTokenRepository.save({
+        token: tokens.refresh_token,
+        user_id: user.id,
+      });
+
+      return { ...tokens, user };
     }
-
-    const tokens = await this.jwtTokenService.getTokens(user.id, user.roles);
-
-    await this.refreshTokenRepository.save({
-      token: tokens.refresh_token,
-      user_id: user.id,
-    });
-
-    return { ...tokens, user };
   }
 
   async useRefreshToken(refreshTokenDto: RefreshTokenDto) {
