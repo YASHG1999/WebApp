@@ -163,7 +163,7 @@ export class AuthService {
       order: { updated_at: 'desc' },
     });
 
-    if (otpToken.verification_id != null) {
+    if (otpToken != null && otpToken.verification_id != null) {
       const status = await this.smsService.firebaseApiCall(
         otpToken.verification_id,
         verifyOtpDto.otp,
