@@ -14,7 +14,7 @@ export class OtpTokensEntity extends CommonEntity {
   @PrimaryGeneratedColumn()
   id: bigint;
 
-  @Column('varchar', { length: 6 })
+  @Column('varchar', { length: 6, nullable: true })
   otp: string;
 
   @Column('uuid', { nullable: true })
@@ -35,6 +35,12 @@ export class OtpTokensEntity extends CommonEntity {
 
   @Column({ nullable: true, default: 5 })
   retries_allowed: number;
+
+  @Column('varchar', { nullable: true })
+  verification_type: string;
+
+  @Column('varchar', { nullable: true })
+  verification_id: string;
 
   @ManyToOne(() => UserEntity)
   @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })

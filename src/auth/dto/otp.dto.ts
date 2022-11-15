@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, Matches } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class OtpDto {
@@ -17,4 +17,10 @@ export class OtpDto {
   @IsString()
   @Matches(/^[6-9]\d{9}$/)
   phone_number: string;
+
+  @ApiProperty({
+    description: 'firebase verification id',
+  })
+  @IsString()
+  verificationId: string;
 }
