@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import * as twilio from 'twilio';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
@@ -20,20 +20,24 @@ export class SmsService {
   }
 
   async firebaseApiCall(verificationId, otp) {
-    const resp = await firstValueFrom(
-      this.httpService.request({
-        method: 'post',
-        baseURL: 'https://www.googleapis.com/identitytoolkit/v3',
-        url: `/relyingparty/verifyPhoneNumber`,
-        params: {
-          key: 'AIzaSyBbOKF48fI_oJdQwZLVDGWv84gvh33eb6Q',
-        },
-        data: {
-          code: otp,
-          sessionInfo: verificationId,
-        },
-      }),
-    );
-    return resp.status;
+    try {
+      const resp = await firstValueFrom(
+        this.httpService.request({
+          method: 'post',
+          baseURL: 'https://www.googleapis.com/identitytoolkit/v3',
+          url: `/relyingparty/verifyPhoneNumber`,
+          params: {
+            key: 'AIzaSyBbOKF48fI_oJdQwZLVDGWv84gvh33eb6Q',
+          },
+          data: {
+            code: otp,
+            sessionInfo: verificationId,
+          },
+        }),
+      );
+      return resp.status;
+    } catch (e) {
+      return e.response.status;
+    }
   }
 }
