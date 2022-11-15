@@ -21,6 +21,5 @@ export class OtpDto {
   @ApiProperty({
     description: 'firebase verification id',
   })
-  @IsString()
   verificationId: string;
 }
