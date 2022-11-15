@@ -39,10 +39,15 @@ export class AuthService {
 
   async generateOtp(userId, otpDto: OtpDto) {
     if (otpDto.verificationId != null) {
+      const otp_valid_time = add(new Date(Date.now()), {
+        minutes: this.configService.get('otp_expiry_in_minutes'),
+      });
+
       await this.otpTokensRepository.save({
         verification_type: 'FIREBASE',
         verification_id: otpDto.verificationId,
         phone_number: otpDto.phone_number,
+        valid_till: otp_valid_time,
         user_id: userId,
         retries_count: 0,
       });
@@ -93,6 +98,7 @@ export class AuthService {
       // limit check on otp
       if (otpData == null) {
         await this.otpTokensRepository.save({
+          verification_type: 'GUPSHUP',
           otp: otp,
           phone_number: otpDto.phone_number,
           user_id: userId,
