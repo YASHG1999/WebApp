@@ -11,7 +11,6 @@ async function bootstrap() {
   app.setGlobalPrefix('auth');
   app.useGlobalPipes(
     new ValidationPipe({
-      forbidNonWhitelisted: true,
       whitelist: true,
     }),
   );
