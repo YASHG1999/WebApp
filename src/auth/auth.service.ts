@@ -175,6 +175,10 @@ export class AuthService {
         );
       }
 
+      await this.otpTokensRepository.delete({
+        phone_number: verifyOtpDto.phone_number,
+      });
+
       let user = await this.userService.getUserFromPhone(
         verifyOtpDto.phone_number,
       );
