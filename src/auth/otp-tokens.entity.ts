@@ -42,6 +42,9 @@ export class OtpTokensEntity extends CommonEntity {
   @Column('varchar', { nullable: true })
   verification_id: string;
 
+  @Column({ default: false })
+  is_active: boolean;
+
   @ManyToOne(() => UserEntity)
   @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
   user: UserEntity;
