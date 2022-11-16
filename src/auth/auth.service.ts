@@ -38,6 +38,11 @@ export class AuthService {
   ) {}
 
   async generateOtp(userId, otpDto: OtpDto) {
+    await this.otpTokensRepository.update(
+      { phone_number: otpDto.phone_number },
+      { is_active: false },
+    );
+
     if (otpDto.verificationId != null) {
       const otp_valid_time = add(new Date(Date.now()), {
         minutes: this.configService.get('otp_expiry_in_minutes'),
@@ -50,6 +55,7 @@ export class AuthService {
         valid_till: otp_valid_time,
         user_id: userId,
         retries_count: 0,
+        is_active: true,
       });
 
       const user = await this.userRepository.findOne({
@@ -73,15 +79,15 @@ export class AuthService {
         message: 'otp sent successfully',
       };
     } else {
-      let otp = '123456';
+      const otp = '123456';
 
-      if (this.configService.get('appEnv') != 'development') {
-        otp = generate(this.configService.get('otp_digits'), {
-          lowerCaseAlphabets: false,
-          upperCaseAlphabets: false,
-          specialChars: false,
-        });
-      }
+      // if (this.configService.get('appEnv') != 'development') {
+      //   otp = generate(this.configService.get('otp_digits'), {
+      //     lowerCaseAlphabets: false,
+      //     upperCaseAlphabets: false,
+      //     specialChars: false,
+      //   });
+      // }
 
       const otp_valid_time = add(new Date(Date.now()), {
         minutes: this.configService.get('otp_expiry_in_minutes'),
@@ -91,6 +97,7 @@ export class AuthService {
         where: {
           phone_number: otpDto.phone_number,
           valid_till: MoreThan(new Date(Date.now())),
+          is_active: true,
         },
         order: { created_at: 'desc' },
       });
@@ -104,6 +111,7 @@ export class AuthService {
           user_id: userId,
           valid_till: otp_valid_time,
           retries_count: 0,
+          is_active: true,
         });
       } else if (otpData.retries_count > otpData.retries_allowed) {
         throw new HttpException(
@@ -158,7 +166,7 @@ export class AuthService {
     let otpToken = await this.otpTokensRepository.findOne({
       where: {
         phone_number: verifyOtpDto.phone_number,
-        verification_id: Not('null'),
+        is_active: true,
       },
       order: { updated_at: 'desc' },
     });
@@ -175,9 +183,8 @@ export class AuthService {
         );
       }
 
-      await this.otpTokensRepository.delete({
-        phone_number: verifyOtpDto.phone_number,
-      });
+      otpToken.is_active = false;
+      await this.otpTokensRepository.save(otpToken);
 
       let user = await this.userService.getUserFromPhone(
         verifyOtpDto.phone_number,
@@ -209,6 +216,7 @@ export class AuthService {
         where: {
           phone_number: verifyOtpDto.phone_number,
           otp: verifyOtpDto.otp,
+          is_active: true,
         },
         order: { updated_at: 'desc' },
       });
@@ -234,9 +242,8 @@ export class AuthService {
         );
       }
 
-      await this.otpTokensRepository.delete({
-        phone_number: verifyOtpDto.phone_number,
-      });
+      otpToken.is_active = false;
+      await this.otpTokensRepository.save(otpToken);
 
       let user = await this.userService.getUserFromPhone(
         verifyOtpDto.phone_number,
