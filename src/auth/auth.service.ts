@@ -40,7 +40,7 @@ export class AuthService {
   async generateOtp(userId, otpDto: OtpDto) {
     await this.otpTokensRepository.update(
       { phone_number: otpDto.phone_number },
-      { is_active: true },
+      { is_active: false },
     );
 
     if (otpDto.verificationId != null) {
