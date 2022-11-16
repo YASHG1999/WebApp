@@ -38,6 +38,11 @@ export class AuthService {
   ) {}
 
   async generateOtp(userId, otpDto: OtpDto) {
+    await this.otpTokensRepository.update(
+      { phone_number: otpDto.phone_number },
+      { is_active: true },
+    );
+
     if (otpDto.verificationId != null) {
       const otp_valid_time = add(new Date(Date.now()), {
         minutes: this.configService.get('otp_expiry_in_minutes'),
@@ -161,7 +166,6 @@ export class AuthService {
     let otpToken = await this.otpTokensRepository.findOne({
       where: {
         phone_number: verifyOtpDto.phone_number,
-        verification_id: Not('null'),
         is_active: true,
       },
       order: { updated_at: 'desc' },
