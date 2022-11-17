@@ -1,13 +1,11 @@
 import {
   IsBoolean,
-  IsEnum,
   IsInt,
   IsNumber,
   IsOptional,
   IsString,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { AddressType } from '../enum/address.enum';
 
 export class CreateAddressDto {
   @ApiPropertyOptional()
@@ -16,9 +14,7 @@ export class CreateAddressDto {
   name: string;
 
   @IsString()
-  @IsEnum(AddressType)
-  @ApiProperty({ enumName: 'AddressType', enum: AddressType })
-  type: AddressType;
+  type: string;
 
   @IsNumber()
   @ApiProperty()

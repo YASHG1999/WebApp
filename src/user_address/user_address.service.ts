@@ -4,7 +4,6 @@ import { CreateAddressInternalDto } from './dto/create_address.internal.dto';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { UserAddressEntity } from './user_address.entity';
 import { UpdateAddressDto } from './dto/update_address.dto';
-import { AddressType } from './enum/address.enum';
 
 @Injectable()
 export class UserAddressService {
@@ -113,7 +112,7 @@ export class UserAddressService {
     const body = {
       ...addressBody,
       is_active: false,
-      type: AddressType.Other,
+      type: 'OTHER',
       updated_by: user_id,
     };
     return await userRepository.save(body);

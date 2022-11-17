@@ -1,6 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
-import { AddressType } from './enum/address.enum';
 import { CommonEntity } from '../core/common/common.entity';
 
 @Entity({ name: 'addresses', schema: 'auth' })
@@ -17,13 +16,9 @@ export class UserAddressEntity extends CommonEntity {
   @ApiProperty()
   name: string;
 
-  @Column({
-    type: 'enum',
-    enum: AddressType,
-    default: AddressType.Other,
-  })
+  @Column()
   @ApiProperty()
-  type: AddressType;
+  type: string;
 
   @Column('double precision', { nullable: true })
   @ApiPropertyOptional()

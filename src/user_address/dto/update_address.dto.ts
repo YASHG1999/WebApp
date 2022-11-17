@@ -20,10 +20,8 @@ export class UpdateAddressDto {
   name: string;
 
   @IsString()
-  @IsEnum(AddressType)
-  @ApiPropertyOptional({ enumName: 'AddressType', enum: AddressType })
   @IsOptional()
-  type: AddressType;
+  type: string;
 
   @IsNumber()
   @ApiPropertyOptional()
