@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator';
+import { IsNotEmpty, IsString, Matches } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class OtpDto {
@@ -21,6 +21,6 @@ export class OtpDto {
   @ApiProperty({
     description: 'firebase verification id',
   })
-  @IsNotEmpty({ message: 'Some error occurred. Kindly try again later.' })
+  // @IsNotEmpty({ message: 'Some error occurred. Kindly try again later.' })
   verificationId: string;
 }
