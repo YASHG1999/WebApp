@@ -43,7 +43,10 @@ export class AuthService {
       { is_active: false },
     );
 
-    if (otpDto.verificationId != null) {
+    if (
+      this.configService.get<string>('appEnv') != 'development' &&
+      otpDto.verificationId != null
+    ) {
       const otp_valid_time = add(new Date(Date.now()), {
         minutes: this.configService.get('otp_expiry_in_minutes'),
       });
@@ -171,7 +174,11 @@ export class AuthService {
       order: { updated_at: 'desc' },
     });
 
-    if (otpToken != null && otpToken.verification_id != null) {
+    if (
+      this.configService.get<string>('appEnv') != 'development' &&
+      otpToken != null &&
+      otpToken.verification_id != null
+    ) {
       const status = await this.smsService.firebaseApiCall(
         otpToken.verification_id,
         verifyOtpDto.otp,
