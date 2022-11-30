@@ -21,6 +21,5 @@ export class OtpDto {
   @ApiProperty({
     description: 'firebase verification id',
   })
-  // @IsNotEmpty({ message: 'Some error occurred. Kindly try again later.' })
   verificationId: string;
 }

@@ -39,6 +39,18 @@ export class EnvironmentVariables {
 
   @Expose()
   ISS?: string;
+
+  @Expose()
+  GUPSHUP_USERID: string;
+
+  @Expose()
+  GUPSHUP_PASSWORD: string;
+
+  @Expose()
+  GUPSHUP_URL: string;
+
+  @Expose()
+  SMS_WHITELIST: string;
 }
 
 export function validate(config: Record<string, unknown>) {

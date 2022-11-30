@@ -1,22 +1,52 @@
-import { HttpException, Injectable } from '@nestjs/common';
-import * as twilio from 'twilio';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
+import { ConfigService } from '@nestjs/config';
+import { Config } from '../../config/configuration';
 
 @Injectable()
 export class SmsService {
-  constructor(private httpService: HttpService) {}
-  async sendOtpSmsTwilio(countryCode, phoneNumber, message) {
-    const accountSid = 'AC212eb07b903da65fa810df249fae5054';
-    const authToken = '738f0996179b6d5d04e27e4dd830e566';
+  constructor(
+    private httpService: HttpService,
+    private configService: ConfigService<Config, true>,
+  ) {}
+  cleanCountryCode(countryCode: string) {
+    return countryCode.replace('+', '');
+  }
 
-    twilio(accountSid, authToken)
-      .messages.create({
-        body: message,
-        from: '+19124204590',
-        to: countryCode + phoneNumber,
-      })
-      .then((message) => console.log(message.sid));
+  async sendSmsGupshup(countryCode, phoneNumber, params): Promise<any> {
+    let template =
+      'DO NOT SHARE: {#var#} is the OTP for your SORTED account. Keep this OTP to yourself for the safety of your account.\n';
+
+    const re = '{#var#}';
+    template = template.replace(re, params[0]);
+
+    const resp = await firstValueFrom(
+      this.httpService.request({
+        method: 'get',
+        baseURL: this.configService.get<string>('gupshup_url'),
+        params: {
+          method: 'SendMessage',
+          send_to: this.cleanCountryCode(countryCode) + phoneNumber,
+          msg: template,
+          msg_type: 'TEXT',
+          userid: this.configService.get<string>('gupshup_userid'),
+          auth_scheme: 'plain',
+          password: this.configService.get<string>('gupshup_pwd'),
+          v: '1.1',
+          format: 'text',
+        },
+      }),
+    );
+
+    if (!resp.data.startsWith('success')) {
+      throw new HttpException(
+        { message: 'Error while sending OTP' },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    return resp;
   }
 
   async firebaseApiCall(verificationId, otp) {
