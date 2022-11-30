@@ -16,7 +16,7 @@ export class SmsService {
 
   async sendSmsGupshup(countryCode, phoneNumber, params): Promise<any> {
     let template =
-      'DO NOT SHARE: {#var#} is the OTP for your SORTED account. Keep this OTP to yourself for the safety of your account.\n';
+      'DO NOT SHARE: {#var#} is the OTP for your SORTED account. Keep this OTP to yourself for the safety of your account.';
 
     const re = '{#var#}';
     template = template.replace(re, params[0]);
