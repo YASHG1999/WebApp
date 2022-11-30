@@ -11,7 +11,7 @@ import { UserRole } from '../user/enum/user.role';
 import { HttpService } from '@nestjs/axios';
 import { SmsService } from '../core/sms/sms.service';
 import { UserEntity } from '../user/user.entity';
-import { Repository, MoreThan, Not } from 'typeorm';
+import { Repository, MoreThan } from 'typeorm';
 import { OtpTokensEntity } from './otp-tokens.entity';
 import { RefreshTokenEntity } from './refresh-token.entity';
 import { add, isBefore } from 'date-fns';
@@ -82,15 +82,17 @@ export class AuthService {
         message: 'otp sent successfully',
       };
     } else {
-      const otp = '123456';
-
-      // if (this.configService.get('appEnv') != 'development') {
-      //   otp = generate(this.configService.get('otp_digits'), {
-      //     lowerCaseAlphabets: false,
-      //     upperCaseAlphabets: false,
-      //     specialChars: false,
-      //   });
-      // }
+      let otp = '123456';
+      if (
+        this.configService.get('appEnv') != 'development' &&
+        !this.existsInWhitelist(otpDto.phone_number)
+      ) {
+        otp = generate(this.configService.get('otp_digits'), {
+          lowerCaseAlphabets: false,
+          upperCaseAlphabets: false,
+          specialChars: false,
+        });
+      }
 
       const otp_valid_time = add(new Date(Date.now()), {
         minutes: this.configService.get('otp_expiry_in_minutes'),
@@ -131,13 +133,14 @@ export class AuthService {
         await this.otpTokensRepository.save(otpData);
       }
 
-      const message = 'Please find your OTP for verification : ' + otp;
-
-      if (this.configService.get<string>('appEnv') != 'development') {
-        await this.smsService.sendOtpSmsTwilio(
+      if (
+        this.configService.get<string>('appEnv') != 'development' &&
+        !this.existsInWhitelist(otpDto.phone_number)
+      ) {
+        await this.smsService.sendSmsGupshup(
           otpDto.country_code,
           otpDto.phone_number,
-          message,
+          [otp],
         );
       }
 
@@ -163,6 +166,13 @@ export class AuthService {
         message: 'otp sent successfully',
       };
     }
+  }
+
+  existsInWhitelist(phone_number: string): boolean {
+    const list = this.configService.get<string[]>('sms_whitelist');
+    return this.configService
+      .get<string[]>('sms_whitelist')
+      .includes(phone_number);
   }
 
   async verifyOtp(verifyOtpDto: VerifyOtpDto, requiredRole?: string) {
