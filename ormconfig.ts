@@ -6,6 +6,7 @@ import { OtpTokensEntity } from './src/auth/otp-tokens.entity';
 import { RefreshTokenEntity } from './src/auth/refresh-token.entity';
 import { DevicesEntity } from './src/user/devices.entity';
 import { UserAddressEntity } from './src/user_address/user_address.entity';
+import { UserStoreMappingEntity } from './src/user_store/user-store-mapping.entity';
 
 config();
 
@@ -20,6 +21,7 @@ export default new DataSource({
     OtpTokensEntity,
     RefreshTokenEntity,
     DevicesEntity,
+    UserStoreMappingEntity,
   ],
   migrations: ['migrations/*'],
   migrationsTableName: 'auth.auth_migration',

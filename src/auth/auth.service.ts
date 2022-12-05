@@ -11,13 +11,16 @@ import { UserRole } from '../user/enum/user.role';
 import { HttpService } from '@nestjs/axios';
 import { SmsService } from '../core/sms/sms.service';
 import { UserEntity } from '../user/user.entity';
-import { Repository, MoreThan } from 'typeorm';
+import { DataSource, MoreThan, Repository } from 'typeorm';
 import { OtpTokensEntity } from './otp-tokens.entity';
 import { RefreshTokenEntity } from './refresh-token.entity';
 import { add, isBefore } from 'date-fns';
 import { DevicesEntity } from '../user/devices.entity';
 import { Config } from '../config/configuration';
 import { InjectRepository } from '@nestjs/typeorm';
+import { RegisterFranchiseStoreDto } from './dto/register-franchise-store.dto';
+import { UserStoreMappingService } from '../user_store/user-store-mapping.service';
+import { UserStoreMappingEntity } from '../user_store/user-store-mapping.entity';
 
 @Injectable()
 export class AuthService {
@@ -25,6 +28,7 @@ export class AuthService {
     private jwtTokenService: JwtTokenService,
     private configService: ConfigService<Config, true>,
     private userService: UserService,
+    private userStoreMappingService: UserStoreMappingService,
     private httpService: HttpService,
     private smsService: SmsService,
     @InjectRepository(UserEntity)
@@ -35,6 +39,9 @@ export class AuthService {
     private readonly refreshTokenRepository: Repository<RefreshTokenEntity>,
     @InjectRepository(DevicesEntity)
     private readonly devicesRepository: Repository<DevicesEntity>,
+    @InjectRepository(UserStoreMappingEntity)
+    private readonly userStoreMappingRepository: Repository<UserStoreMappingEntity>,
+    private dataSource: DataSource,
   ) {}
 
   async generateOtp(userId, otpDto: OtpDto) {
@@ -350,5 +357,219 @@ export class AuthService {
       success: true,
       message: 'logged out successfully',
     };
+  }
+
+  checkOtpValidity(otpToken: OtpTokensEntity) {
+    if (otpToken == null) {
+      throw new HttpException(
+        { message: 'OTP does not match' },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (otpToken.retries_count > otpToken.retries_allowed) {
+      throw new HttpException(
+        { message: 'OTP retry count exceeded' },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (isBefore(otpToken.valid_till, new Date(Date.now()))) {
+      throw new HttpException(
+        { message: 'OTP has expired' },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  getOtp(otpDto: OtpDto) {
+    let otp = '123456';
+    if (
+      this.configService.get('appEnv') != 'development' &&
+      !this.existsInWhitelist(otpDto.phone_number)
+    ) {
+      otp = generate(this.configService.get('otp_digits'), {
+        lowerCaseAlphabets: false,
+        upperCaseAlphabets: false,
+        specialChars: false,
+      });
+    }
+    return otp;
+  }
+
+  async otpFranchiseStore(userId, otpDto: OtpDto) {
+    const user = await this.userRepository.findOne({
+      where: {
+        phone_number: otpDto.phone_number,
+        is_verified: true,
+        is_deleted: false,
+      },
+    });
+
+    if (user == null || !user.roles.includes(UserRole.FRANCHISEOWNER)) {
+      throw new HttpException(
+        { message: 'This phone number is not registered.' },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    await this.otpTokensRepository.update(
+      { phone_number: otpDto.phone_number },
+      { is_active: false },
+    );
+
+    const otp = this.getOtp(otpDto);
+
+    const otp_valid_time = add(new Date(Date.now()), {
+      minutes: this.configService.get('otp_expiry_in_minutes'),
+    });
+
+    await this.otpTokensRepository.save({
+      verification_type: 'GUPSHUP',
+      otp: otp,
+      phone_number: otpDto.phone_number,
+      user_id: user.id,
+      valid_till: otp_valid_time,
+      retries_count: 0,
+      is_active: true,
+    });
+
+    if (
+      this.configService.get<string>('appEnv') != 'development' &&
+      !this.existsInWhitelist(otpDto.phone_number)
+    ) {
+      await this.smsService.sendSmsGupshup(
+        otpDto.country_code,
+        otpDto.phone_number,
+        [otp],
+      );
+    }
+
+    return {
+      name: user.name,
+      isNewUser: false,
+      success: true,
+      message: 'otp sent successfully',
+    };
+  }
+
+  async verifyOtpFranchiseStore(verifyOtpDto: VerifyOtpDto) {
+    const otpToken = await this.otpTokensRepository.findOne({
+      where: {
+        phone_number: verifyOtpDto.phone_number,
+        otp: verifyOtpDto.otp,
+        is_active: true,
+      },
+      order: { updated_at: 'desc' },
+    });
+
+    this.checkOtpValidity(otpToken);
+
+    otpToken.is_active = false;
+    await this.otpTokensRepository.save(otpToken);
+
+    const user = await this.userService.getUserFromPhone(
+      verifyOtpDto.phone_number,
+    );
+
+    if (user == null) {
+      throw new HttpException(
+        { message: 'This phone number is not registered' },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const userStoreMapping = await this.userStoreMappingRepository.findOne({
+      where: {
+        user_id: user.id,
+        is_active: true,
+      },
+    });
+
+    const tokens = await this.jwtTokenService.getTokensNew({
+      userId: user.id,
+      roles: user.roles,
+      storeId: userStoreMapping.store_id,
+    });
+
+    await this.refreshTokenRepository.save({
+      token: tokens.refresh_token,
+      user_id: user.id,
+    });
+
+    return { ...tokens, user };
+  }
+
+  async registerFranchiseStore(
+    userId,
+    registerFranchiseStoreDto: RegisterFranchiseStoreDto,
+  ) {
+    let user = await this.userRepository.findOne({
+      where: {
+        phone_number: registerFranchiseStoreDto.phone_number,
+        is_verified: true,
+        is_deleted: false,
+      },
+    });
+
+    const userStoreMapping = await this.userStoreMappingRepository.findOne({
+      where: { store_id: registerFranchiseStoreDto.storeId },
+    });
+
+    if (user != null && user.roles.includes(UserRole.FRANCHISEOWNER)) {
+      throw new HttpException(
+        { message: 'User is already registered' },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (userStoreMapping != null) {
+      throw new HttpException(
+        { message: 'This Store is Already registered.' },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      if (user == null) {
+        const user1 = {
+          name: registerFranchiseStoreDto.name,
+          phone_number: registerFranchiseStoreDto.phone_number,
+          roles: [UserRole.VISITOR, UserRole.FRANCHISEOWNER],
+          is_verified: true,
+        };
+
+        user = new UserEntity();
+        Object.assign(user, user1);
+
+        user = await queryRunner.manager.save(user);
+
+        const userStoreMapping1 = {
+          user_id: user.id,
+          store_id: registerFranchiseStoreDto.storeId,
+        };
+
+        let userStoreMapping = new UserStoreMappingEntity();
+        Object.assign(userStoreMapping, userStoreMapping1);
+
+        userStoreMapping = await queryRunner.manager.save(userStoreMapping);
+
+        await queryRunner.commitTransaction();
+      }
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw new HttpException(
+        { message: 'Something went wrong.' },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    } finally {
+      await queryRunner.release();
+    }
+
+    return user;
   }
 }
