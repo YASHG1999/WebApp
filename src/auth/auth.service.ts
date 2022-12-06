@@ -486,6 +486,13 @@ export class AuthService {
       },
     });
 
+    if (userStoreMapping == null) {
+      throw new HttpException(
+        { message: 'User does not have a mapped store' },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     const tokens = await this.jwtTokenService.getTokensNew({
       userId: user.id,
       roles: user.roles,

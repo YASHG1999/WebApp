@@ -6,7 +6,7 @@ export class RegisterFranchiseStoreDto {
     description: 'id of the franchise store',
   })
   @IsNotEmpty()
-  storeId: number;
+  storeId: string;
 
   @ApiProperty({
     description: 'country code of the phone number',

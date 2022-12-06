@@ -14,7 +14,7 @@ export class UserStoreMappingEntity extends CommonEntity {
 
   @Column({ nullable: false })
   @ApiProperty()
-  store_id: number;
+  store_id: string;
 
   @ApiPropertyOptional()
   @Column({ default: true })
