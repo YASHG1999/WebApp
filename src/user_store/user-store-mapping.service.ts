@@ -12,7 +12,7 @@ export class UserStoreMappingService {
 
   async createUserStoreMapping(
     user_id: string,
-    store_id: number,
+    store_id: string,
   ): Promise<UserStoreMappingEntity> {
     return await this.userStoreMappingRepository.save({
       user_id: user_id,
