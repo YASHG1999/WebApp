@@ -134,7 +134,7 @@ export class AuthService {
       }
 
       if (
-        this.configService.get<string>('appEnv') != 'development' &&
+        this.configService.get('appEnv') != 'development' &&
         !this.existsInWhitelist(otpDto.phone_number)
       ) {
         await this.smsService.sendSmsGupshup(
