@@ -84,7 +84,7 @@ export class AuthService {
     } else {
       let otp = '123456';
       if (
-        this.configService.get('appEnv') != 'development' &&
+        this.configService.get<string>('appEnv') !== 'development' &&
         !this.existsInWhitelist(otpDto.phone_number)
       ) {
         otp = generate(this.configService.get('otp_digits'), {
@@ -134,7 +134,7 @@ export class AuthService {
       }
 
       if (
-        this.configService.get('appEnv') != 'development' &&
+        this.configService.get<string>('appEnv') !== 'development' &&
         !this.existsInWhitelist(otpDto.phone_number)
       ) {
         await this.smsService.sendSmsGupshup(
@@ -142,6 +142,7 @@ export class AuthService {
           otpDto.phone_number,
           [otp],
         );
+        console.log('otp sent to : ' + otpDto.phone_number);
       }
 
       // SHOULD WE GET NEW USER FLAG FOR UNVERIFIED CONSUMER
