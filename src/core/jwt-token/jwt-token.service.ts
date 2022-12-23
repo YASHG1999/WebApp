@@ -61,4 +61,35 @@ export class JwtTokenService {
       secret: this.configService.get<string>('rt_secret'),
     });
   }
+
+  async getAccessTokenNew(payload) {
+    const jwtPayload = {
+      iss: this.configService.get<string>('iss'),
+      ...payload,
+    };
+
+    return await this.jwtService.signAsync(jwtPayload, {
+      secret: this.configService.get<string>('at_secret'),
+      expiresIn: this.configService.get<string>('at_expiry'),
+    });
+  }
+
+  async getRefreshTokenNew(payload) {
+    const jwtPayload = {
+      iss: this.configService.get<string>('iss'),
+      ...payload,
+    };
+
+    return await this.jwtService.signAsync(jwtPayload, {
+      secret: this.configService.get<string>('rt_expiry'),
+      expiresIn: this.configService.get<string>('rt_expiry'),
+    });
+  }
+
+  async getTokensNew(payload) {
+    return {
+      access_token: await this.getAccessTokenNew(payload),
+      refresh_token: await this.getRefreshTokenNew(payload),
+    };
+  }
 }

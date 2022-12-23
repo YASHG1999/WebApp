@@ -11,6 +11,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserAddressModule } from './user_address/user_address.module';
 import configuration from './config/configuration';
 import { validate } from './config/env.validation';
+import { UserStoreMappingModule } from './user_store/user-store-mapping.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { validate } from './config/env.validation';
     SmsModule,
     CommonModule,
     UserAddressModule,
+    UserStoreMappingModule,
   ],
   controllers: [],
   providers: [
