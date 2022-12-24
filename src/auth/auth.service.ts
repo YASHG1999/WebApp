@@ -520,20 +520,9 @@ export class AuthService {
       },
     });
 
-    const userStoreMapping = await this.userStoreMappingRepository.findOne({
-      where: { store_id: registerFranchiseStoreDto.storeId },
-    });
-
-    if (user != null && user.roles.includes(UserRole.FRANCHISEOWNER)) {
+    if (user != null) {
       throw new HttpException(
         { message: 'User is already registered' },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    if (userStoreMapping != null) {
-      throw new HttpException(
-        { message: 'This Store is Already registered.' },
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -561,10 +550,10 @@ export class AuthService {
           store_id: registerFranchiseStoreDto.storeId,
         };
 
-        let userStoreMapping = new UserStoreMappingEntity();
+        const userStoreMapping = new UserStoreMappingEntity();
         Object.assign(userStoreMapping, userStoreMapping1);
 
-        userStoreMapping = await queryRunner.manager.save(userStoreMapping);
+        await queryRunner.manager.save(userStoreMapping);
 
         await queryRunner.commitTransaction();
       }
