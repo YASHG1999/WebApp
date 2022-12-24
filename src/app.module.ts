@@ -12,6 +12,7 @@ import { UserAddressModule } from './user_address/user_address.module';
 import configuration from './config/configuration';
 import { validate } from './config/env.validation';
 import { RequestLoggingMiddleware } from './core/logging.middleware';
+import { UserStoreMappingModule } from './user_store/user-store-mapping.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { RequestLoggingMiddleware } from './core/logging.middleware';
     SmsModule,
     CommonModule,
     UserAddressModule,
+    UserStoreMappingModule,
   ],
   controllers: [],
   providers: [

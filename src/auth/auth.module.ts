@@ -12,6 +12,8 @@ import { ConfigService } from '@nestjs/config';
 import { RefreshTokenEntity } from './refresh-token.entity';
 import { OtpTokensEntity } from './otp-tokens.entity';
 import { DevicesEntity } from '../user/devices.entity';
+import { UserStoreMappingService } from '../user_store/user-store-mapping.service';
+import { UserStoreMappingEntity } from '../user_store/user-store-mapping.entity';
 
 @Module({
   imports: [
@@ -22,6 +24,7 @@ import { DevicesEntity } from '../user/devices.entity';
       RefreshTokenEntity,
       OtpTokensEntity,
       DevicesEntity,
+      UserStoreMappingEntity,
     ]),
   ],
   controllers: [AuthController],
@@ -31,6 +34,7 @@ import { DevicesEntity } from '../user/devices.entity';
     JwtTokenService,
     SmsService,
     ConfigService,
+    UserStoreMappingService,
   ],
 })
 export class AuthModule {}
