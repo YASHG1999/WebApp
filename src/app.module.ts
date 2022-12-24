@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -11,6 +11,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserAddressModule } from './user_address/user_address.module';
 import configuration from './config/configuration';
 import { validate } from './config/env.validation';
+import { RequestLoggingMiddleware } from './core/logging.middleware';
 
 @Module({
   imports: [
@@ -40,6 +41,11 @@ import { validate } from './config/env.validation';
       provide: APP_GUARD,
       useClass: RolesGuard,
     },
+    RequestLoggingMiddleware,
   ],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestLoggingMiddleware).forRoutes('*');
+  }
+}
