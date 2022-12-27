@@ -4,6 +4,7 @@ import { CreateAddressInternalDto } from './dto/create_address.internal.dto';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { UserAddressEntity } from './user_address.entity';
 import { UpdateAddressDto } from './dto/update_address.dto';
+import { UpdateAddressAdminDto } from './dto/update_address_admin.dto';
 
 @Injectable()
 export class UserAddressService {
@@ -160,5 +161,45 @@ export class UserAddressService {
     }
 
     return address;
+  }
+
+  async updateUserAddressByAdmin(
+    addressBody: UpdateAddressAdminDto,
+    user_id: string,
+    addressId: bigint,
+  ): Promise<UserAddressEntity> {
+    const userAddressRepository =
+      this.dataSource.getRepository(UserAddressEntity);
+
+    const address = await userAddressRepository.findOne({
+      where: { id: addressId },
+    });
+
+    if (address == null) {
+      throw new HttpException(
+        { message: 'Address not found' },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    address.address_line_1 = addressBody.address_line_1;
+    address.address_line_2 = addressBody.address_line_2;
+    address.city = addressBody.city;
+    address.state = addressBody.state;
+    address.landmark = addressBody.landmark;
+    address.pincode = addressBody.pincode;
+    address.contact_number = addressBody.contact_number;
+    address.updated_by = user_id;
+
+    return await userAddressRepository.save(address);
+  }
+
+  async getUserAddressesByAdmin(user_id: string): Promise<UserAddressEntity[]> {
+    const userAddressRepository =
+      this.dataSource.getRepository(UserAddressEntity);
+    return await userAddressRepository.findBy({
+      user_id: user_id,
+      is_active: true,
+    });
   }
 }
