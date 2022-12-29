@@ -480,24 +480,11 @@ export class AuthService {
       );
     }
 
-    const userStoreMapping = await this.userStoreMappingRepository.findOne({
-      where: {
-        user_id: user.id,
-        is_active: true,
-      },
-    });
-
-    if (userStoreMapping == null) {
-      throw new HttpException(
-        { message: 'User does not have a mapped store' },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+   
 
     const tokens = await this.jwtTokenService.getTokensNew({
       userId: user.id,
       roles: user.roles,
-      storeId: userStoreMapping.store_id,
     });
 
     await this.refreshTokenRepository.save({
@@ -506,6 +493,30 @@ export class AuthService {
     });
 
     return { ...tokens, user };
+  }
+
+  async getStores(userId){
+    const userStoreMapping = await this.userStoreMappingRepository.find({
+      where: {
+        user_id: userId,
+        is_active: true,
+      },
+      select: ['store_id']
+    });
+
+    if (userStoreMapping == null) {
+      throw new HttpException(
+        { message: 'User does not have a mapped store' },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    const stores=[];
+     userStoreMapping.forEach(element => {
+      stores.push(element.store_id);
+     });
+
+    return {"stores" : stores};
+    
   }
 
   async registerFranchiseStore(
