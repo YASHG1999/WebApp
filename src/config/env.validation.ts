@@ -51,6 +51,12 @@ export class EnvironmentVariables {
 
   @Expose()
   SMS_WHITELIST: string;
+
+  @Expose()
+  WAREHOUSE_URL: string;
+
+  @Expose()
+  RZ_AUTH_KEY: string;
 }
 
 export function validate(config: Record<string, unknown>) {
