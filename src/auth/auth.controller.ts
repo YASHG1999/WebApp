@@ -6,6 +6,7 @@ import {
   UseFilters,
   HttpStatus,
   HttpCode,
+  Get,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { VerifyOtpDto } from './dto';
@@ -100,6 +101,17 @@ export class AuthController {
     @Body() verifyOtpDto: VerifyOtpDto,
   ) {
     const m = this.authService.verifyOtpFranchiseStore(verifyOtpDto);
+    return m;
+  }
+
+  
+  @Roles(UserRole.FRANCHISEOWNER)
+  @Get('franchise-store/list')
+  @HttpCode(HttpStatus.OK)
+  getFranchiseStores(
+    @Headers('userId') userId,
+  ) {
+    const m = this.authService.getStores(userId);
     return m;
   }
 }

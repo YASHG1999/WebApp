@@ -21,6 +21,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { RegisterFranchiseStoreDto } from './dto/register-franchise-store.dto';
 import { UserStoreMappingService } from '../user_store/user-store-mapping.service';
 import { UserStoreMappingEntity } from '../user_store/user-store-mapping.entity';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class AuthService {
@@ -479,25 +480,10 @@ export class AuthService {
         HttpStatus.BAD_REQUEST,
       );
     }
-
-    const userStoreMapping = await this.userStoreMappingRepository.findOne({
-      where: {
-        user_id: user.id,
-        is_active: true,
-      },
-    });
-
-    if (userStoreMapping == null) {
-      throw new HttpException(
-        { message: 'User does not have a mapped store' },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
+   
     const tokens = await this.jwtTokenService.getTokensNew({
       userId: user.id,
       roles: user.roles,
-      storeId: userStoreMapping.store_id,
     });
 
     await this.refreshTokenRepository.save({
@@ -507,6 +493,58 @@ export class AuthService {
 
     return { ...tokens, user };
   }
+
+  async getStores(userId){
+    const userStoreMapping = await this.userStoreMappingRepository.find({
+      where: {
+        user_id: userId,
+        is_active: true,
+      },
+      select: ['store_id']
+    });
+
+    if (userStoreMapping.length == 0) {
+      throw new HttpException(
+        { message: 'User does not have a mapped store' },
+        HttpStatus.BAD_REQUEST,
+      );
+      return;
+    }
+    const stores=[];
+     userStoreMapping.forEach(element => {
+      stores.push(element.store_id);
+     });
+
+     
+    const obj = {"stores" : stores};
+   return this.getStoreInfo(obj);
+   
+    
+  }
+
+  async getStoreInfo(storeId: any): Promise<any> {
+   try{
+    const resp = await firstValueFrom(
+      this.httpService.request({
+        method: 'post',
+        data: storeId,
+        baseURL: this.configService.get<string>('warehouse_url')+'/api/v1/store/info',
+        headers: {
+        'content-type': 'application/json',
+        'rz-auth-key': this.configService.get<string>('rz_auth_key'),
+        },
+      }),
+    );
+    return resp.data;
+  } catch (e) {
+    console.log(e);
+    throw new HttpException(
+      { message: 'Something went wrong while fetching data from Warehouse.' },
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
+  }
+}
+  
 
   async registerFranchiseStore(
     userId,
