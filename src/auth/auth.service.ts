@@ -11,7 +11,7 @@ import { UserRole } from '../user/enum/user.role';
 import { HttpService } from '@nestjs/axios';
 import { SmsService } from '../core/sms/sms.service';
 import { UserEntity } from '../user/user.entity';
-import { DataSource, MoreThan, Repository } from 'typeorm';
+import {DataSource, LessThanOrEqual, MoreThan, Repository} from 'typeorm';
 import { OtpTokensEntity } from './otp-tokens.entity';
 import { RefreshTokenEntity } from './refresh-token.entity';
 import { add, isBefore } from 'date-fns';
@@ -47,7 +47,7 @@ export class AuthService {
 
   async generateOtp(userId, otpDto: OtpDto) {
     await this.otpTokensRepository.update(
-      { phone_number: otpDto.phone_number },
+      { phone_number: otpDto.phone_number, valid_till: LessThanOrEqual(new Date(Date.now())) },
       { is_active: false },
     );
 
@@ -112,7 +112,7 @@ export class AuthService {
           valid_till: MoreThan(new Date(Date.now())),
           is_active: true,
         },
-        order: { created_at: 'desc' },
+        order: { updated_at: 'desc' },
       });
 
       // limit check on otp
@@ -132,12 +132,14 @@ export class AuthService {
           HttpStatus.BAD_REQUEST,
         );
       } else {
-        otpData.otp = otp;
+        //otpData.otp = otp;
         otpData.retries_count = otpData
           ? otpData.retries_count
             ? otpData.retries_count + 1
             : 1
           : 1;
+        otpData.valid_till = otp_valid_time;
+        otp = otpData.otp;
         await this.otpTokensRepository.save(otpData);
       }
 
@@ -480,7 +482,7 @@ export class AuthService {
         HttpStatus.BAD_REQUEST,
       );
     }
-   
+
     const tokens = await this.jwtTokenService.getTokensNew({
       userId: user.id,
       roles: user.roles,
@@ -515,11 +517,11 @@ export class AuthService {
       stores.push(element.store_id);
      });
 
-     
+
     const obj = {"stores" : stores};
    return this.getStoreInfo(obj);
-   
-    
+
+
   }
 
   async getStoreInfo(storeId: any): Promise<any> {
@@ -544,7 +546,7 @@ export class AuthService {
     );
   }
 }
-  
+
 
   async registerFranchiseStore(
     userId,
