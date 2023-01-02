@@ -112,7 +112,7 @@ export class AuthService {
           valid_till: MoreThan(new Date(Date.now())),
           is_active: true,
         },
-        order: { updated_at: 'desc' },
+        order: { created_at: 'desc' },
       });
 
       // limit check on otp
