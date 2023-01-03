@@ -241,10 +241,13 @@ export class AuthService {
 
       return { ...tokens, user };
     } else {
-      if (
-        otpToken == null ||
-        isBefore(otpToken.valid_till, new Date(Date.now()))
-      ) {
+      if (otpToken == null)
+        throw new HttpException(
+          { message: 'OTP not in use' },
+          HttpStatus.BAD_REQUEST,
+        );
+
+      if (isBefore(otpToken.valid_till, new Date(Date.now()))) {
         otpToken.is_active = false;
         await this.otpTokensRepository.save(otpToken);
         throw new HttpException(
