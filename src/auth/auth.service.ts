@@ -47,7 +47,7 @@ export class AuthService {
 
   async generateOtp(userId, otpDto: OtpDto) {
     await this.otpTokensRepository.update(
-      { phone_number: otpDto.phone_number, valid_till: LessThanOrEqual(new Date(Date.now())) },
+      { phone_number: otpDto.phone_number, valid_till: LessThanOrEqual(new Date(Date.now())), is_active: true },
       { is_active: false },
     );
 
@@ -132,14 +132,13 @@ export class AuthService {
           HttpStatus.BAD_REQUEST,
         );
       } else {
-        //otpData.otp = otp;
+        otp = otpData.otp;
         otpData.retries_count = otpData
           ? otpData.retries_count
             ? otpData.retries_count + 1
             : 1
           : 1;
         otpData.valid_till = otp_valid_time;
-        otp = otpData.otp;
         await this.otpTokensRepository.save(otpData);
       }
 
