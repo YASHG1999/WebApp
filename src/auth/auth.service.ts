@@ -11,7 +11,7 @@ import { UserRole } from '../user/enum/user.role';
 import { HttpService } from '@nestjs/axios';
 import { SmsService } from '../core/sms/sms.service';
 import { UserEntity } from '../user/user.entity';
-import {DataSource, LessThanOrEqual, MoreThan, Repository} from 'typeorm';
+import { DataSource, LessThanOrEqual, MoreThan, Repository } from 'typeorm';
 import { OtpTokensEntity } from './otp-tokens.entity';
 import { RefreshTokenEntity } from './refresh-token.entity';
 import { add, isBefore } from 'date-fns';
@@ -47,7 +47,11 @@ export class AuthService {
 
   async generateOtp(userId, otpDto: OtpDto) {
     await this.otpTokensRepository.update(
-      { phone_number: otpDto.phone_number, valid_till: LessThanOrEqual(new Date(Date.now())), is_active: true },
+      {
+        phone_number: otpDto.phone_number,
+        valid_till: LessThanOrEqual(new Date(Date.now())),
+        is_active: true,
+      },
       { is_active: false },
     );
 
@@ -179,7 +183,6 @@ export class AuthService {
   }
 
   existsInWhitelist(phone_number: string): boolean {
-    const list = this.configService.get<string[]>('sms_whitelist');
     return this.configService
       .get<string[]>('sms_whitelist')
       .includes(phone_number);
@@ -495,13 +498,13 @@ export class AuthService {
     return { ...tokens, user };
   }
 
-  async getStores(userId){
+  async getStores(userId) {
     const userStoreMapping = await this.userStoreMappingRepository.find({
       where: {
         user_id: userId,
         is_active: true,
       },
-      select: ['store_id']
+      select: ['store_id'],
     });
 
     if (userStoreMapping.length == 0) {
@@ -511,41 +514,39 @@ export class AuthService {
       );
       return;
     }
-    const stores=[];
-     userStoreMapping.forEach(element => {
+    const stores = [];
+    userStoreMapping.forEach((element) => {
       stores.push(element.store_id);
-     });
+    });
 
-
-    const obj = {"stores" : stores};
-   return this.getStoreInfo(obj);
-
-
+    const obj = { stores: stores };
+    return this.getStoreInfo(obj);
   }
 
   async getStoreInfo(storeId: any): Promise<any> {
-   try{
-    const resp = await firstValueFrom(
-      this.httpService.request({
-        method: 'post',
-        data: storeId,
-        baseURL: this.configService.get<string>('warehouse_url')+'/api/v1/store/info',
-        headers: {
-        'content-type': 'application/json',
-        'rz-auth-key': this.configService.get<string>('rz_auth_key'),
-        },
-      }),
-    );
-    return resp.data;
-  } catch (e) {
-    console.log(e);
-    throw new HttpException(
-      { message: 'Something went wrong while fetching data from Warehouse.' },
-      HttpStatus.INTERNAL_SERVER_ERROR,
-    );
+    try {
+      const resp = await firstValueFrom(
+        this.httpService.request({
+          method: 'post',
+          data: storeId,
+          baseURL:
+            this.configService.get<string>('warehouse_url') +
+            '/api/v1/store/info',
+          headers: {
+            'content-type': 'application/json',
+            'rz-auth-key': this.configService.get<string>('rz_auth_key'),
+          },
+        }),
+      );
+      return resp.data;
+    } catch (e) {
+      console.log(e);
+      throw new HttpException(
+        { message: 'Something went wrong while fetching data from Warehouse.' },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
-}
-
 
   async registerFranchiseStore(
     userId,
