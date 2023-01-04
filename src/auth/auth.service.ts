@@ -301,9 +301,19 @@ export class AuthService {
           roles: [UserRole.VISITOR, UserRole.CONSUMER],
           is_verified: true,
         });
-      } else if (user.is_verified == false) {
-        user.is_verified = true;
-        user = await this.userRepository.save(user);
+      } else {
+        let userChanged = false;
+        if (!user.roles.includes(UserRole.CONSUMER)) {
+          user.roles.push(UserRole.CONSUMER);
+          userChanged = true;
+        }
+
+        if (user.is_verified == false) {
+          user.is_verified = true;
+          userChanged = true;
+        }
+
+        if (userChanged) await this.userRepository.save(user);
       }
 
       const tokens = await this.jwtTokenService.getTokens(user.id, user.roles);
