@@ -191,38 +191,7 @@ export class AuthService {
 
       return { ...tokens, user };
     } else {
-      if (otpToken == null)
-        throw new HttpException(
-          { message: 'OTP not in use' },
-          HttpStatus.BAD_REQUEST,
-        );
-
-      if (isBefore(otpToken.valid_till, new Date(Date.now()))) {
-        otpToken.is_active = false;
-        await this.otpTokensRepository.save(otpToken);
-        throw new HttpException(
-          { message: 'OTP has expired' },
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-
-      if (otpToken.retries_count >= otpToken.retries_allowed) {
-        throw new HttpException(
-          { message: 'OTP retry count exceeded' },
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-
-      if (otpToken.otp != verifyOtpDto.otp) {
-        otpToken.retries_count = otpToken.retries_count
-          ? otpToken.retries_count + 1
-          : 1;
-        await this.otpTokensRepository.save(otpToken);
-        throw new HttpException(
-          { message: 'OTP does not match' },
-          HttpStatus.BAD_REQUEST,
-        );
-      }
+      await this.validateOTP(otpToken, verifyOtpDto);
 
       let user = await this.userService.getUserFromPhone(
         verifyOtpDto.phone_number,
@@ -332,24 +301,36 @@ export class AuthService {
     };
   }
 
-  checkOtpValidity(otpToken: OtpTokensEntity) {
-    if (otpToken == null) {
+  async validateOTP(otpToken: OtpTokensEntity, verifyOtpDto: VerifyOtpDto) {
+    if (otpToken == null)
       throw new HttpException(
-        { message: 'OTP does not match' },
+        { message: 'OTP not in use' },
+        HttpStatus.BAD_REQUEST,
+      );
+
+    if (isBefore(otpToken.valid_till, new Date(Date.now()))) {
+      otpToken.is_active = false;
+      await this.otpTokensRepository.save(otpToken);
+      throw new HttpException(
+        { message: 'OTP has expired' },
         HttpStatus.BAD_REQUEST,
       );
     }
 
-    if (otpToken.retries_count > otpToken.retries_allowed) {
+    if (otpToken.retries_count >= otpToken.retries_allowed) {
       throw new HttpException(
         { message: 'OTP retry count exceeded' },
         HttpStatus.BAD_REQUEST,
       );
     }
 
-    if (isBefore(otpToken.valid_till, new Date(Date.now()))) {
+    if (otpToken.otp != verifyOtpDto.otp) {
+      otpToken.retries_count = otpToken.retries_count
+        ? otpToken.retries_count + 1
+        : 1;
+      await this.otpTokensRepository.save(otpToken);
       throw new HttpException(
-        { message: 'OTP has expired' },
+        { message: 'OTP does not match' },
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -458,13 +439,12 @@ export class AuthService {
     const otpToken = await this.otpTokensRepository.findOne({
       where: {
         phone_number: verifyOtpDto.phone_number,
-        otp: verifyOtpDto.otp,
         is_active: true,
       },
       order: { updated_at: 'desc' },
     });
 
-    this.checkOtpValidity(otpToken);
+    await this.validateOTP(otpToken, verifyOtpDto);
 
     otpToken.is_active = false;
     await this.otpTokensRepository.save(otpToken);
