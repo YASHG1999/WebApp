@@ -514,21 +514,15 @@ export class AuthService {
      userStoreMapping.forEach(element => {
       stores.push(element.store_id);
      });
-
-     
-    const obj = {"stores" : stores};
-   return this.getStoreInfo(obj);
-   
-    
+    return this.getStoreInfo(stores);
   }
 
   async getStoreInfo(storeId: any): Promise<any> {
    try{
     const resp = await firstValueFrom(
       this.httpService.request({
-        method: 'post',
-        data: storeId,
-        baseURL: this.configService.get<string>('warehouse_url')+'/api/v1/store/info',
+        method: 'get',
+        baseURL: this.configService.get<string>('warehouse_url')+'/api/v1/stores?ids='+storeId,
         headers: {
         'content-type': 'application/json',
         'rz-auth-key': this.configService.get<string>('rz_auth_key'),
