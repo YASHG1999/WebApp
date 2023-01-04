@@ -94,57 +94,7 @@ export class AuthService {
         message: 'otp sent successfully',
       };
     } else {
-      let otp = '123456';
-      if (
-        this.configService.get<string>('appEnv') !== 'development' &&
-        !this.existsInWhitelist(otpDto.phone_number)
-      ) {
-        otp = generate(this.configService.get('otp_digits'), {
-          lowerCaseAlphabets: false,
-          upperCaseAlphabets: false,
-          specialChars: false,
-        });
-      }
-
-      const otp_valid_time = add(new Date(Date.now()), {
-        minutes: this.configService.get('otp_expiry_in_minutes'),
-      });
-
-      const otpData = await this.otpTokensRepository.findOne({
-        where: {
-          phone_number: otpDto.phone_number,
-          valid_till: MoreThan(new Date(Date.now())),
-          is_active: true,
-        },
-        order: { created_at: 'desc' },
-      });
-
-      // limit check on otp
-      if (otpData == null) {
-        await this.otpTokensRepository.save({
-          verification_type: 'GUPSHUP',
-          otp: otp,
-          phone_number: otpDto.phone_number,
-          user_id: userId,
-          valid_till: otp_valid_time,
-          retries_count: 0,
-          is_active: true,
-        });
-      } else if (otpData.retries_count >= otpData.retries_allowed) {
-        throw new HttpException(
-          { message: 'OTP retry count exceeded' },
-          HttpStatus.BAD_REQUEST,
-        );
-      } else {
-        otp = otpData.otp;
-        otpData.retries_count = otpData
-          ? otpData.retries_count
-            ? otpData.retries_count + 1
-            : 1
-          : 1;
-        otpData.valid_till = otp_valid_time;
-        await this.otpTokensRepository.save(otpData);
-      }
+      const otp = await this.getOtp(userId, otpDto);
 
       if (
         this.configService.get<string>('appEnv') !== 'development' &&
@@ -405,7 +355,7 @@ export class AuthService {
     }
   }
 
-  getOtp(otpDto: OtpDto) {
+  async getOtp(userId, otpDto: OtpDto) {
     let otp = '123456';
     if (
       this.configService.get('appEnv') != 'development' &&
@@ -416,6 +366,44 @@ export class AuthService {
         upperCaseAlphabets: false,
         specialChars: false,
       });
+    }
+    const otp_valid_time = add(new Date(Date.now()), {
+      minutes: this.configService.get('otp_expiry_in_minutes'),
+    });
+
+    const otpData = await this.otpTokensRepository.findOne({
+      where: {
+        phone_number: otpDto.phone_number,
+        valid_till: MoreThan(new Date(Date.now())),
+        is_active: true,
+      },
+      order: { created_at: 'desc' },
+    });
+
+    if (otpData == null) {
+      await this.otpTokensRepository.save({
+        verification_type: 'GUPSHUP',
+        otp: otp,
+        phone_number: otpDto.phone_number,
+        user_id: userId,
+        valid_till: otp_valid_time,
+        retries_count: 0,
+        is_active: true,
+      });
+    } else if (otpData.retries_count >= otpData.retries_allowed) {
+      throw new HttpException(
+        { message: 'OTP retry count exceeded' },
+        HttpStatus.BAD_REQUEST,
+      );
+    } else {
+      otp = otpData.otp;
+      otpData.retries_count = otpData
+        ? otpData.retries_count
+          ? otpData.retries_count + 1
+          : 1
+        : 1;
+      otpData.valid_till = otp_valid_time;
+      await this.otpTokensRepository.save(otpData);
     }
     return otp;
   }
@@ -437,25 +425,15 @@ export class AuthService {
     }
 
     await this.otpTokensRepository.update(
-      { phone_number: otpDto.phone_number },
+      {
+        phone_number: otpDto.phone_number,
+        valid_till: LessThanOrEqual(new Date(Date.now())),
+        is_active: true,
+      },
       { is_active: false },
     );
 
-    const otp = this.getOtp(otpDto);
-
-    const otp_valid_time = add(new Date(Date.now()), {
-      minutes: this.configService.get('otp_expiry_in_minutes'),
-    });
-
-    await this.otpTokensRepository.save({
-      verification_type: 'GUPSHUP',
-      otp: otp,
-      phone_number: otpDto.phone_number,
-      user_id: user.id,
-      valid_till: otp_valid_time,
-      retries_count: 0,
-      is_active: true,
-    });
+    const otp = await this.getOtp(user.id, otpDto);
 
     if (
       this.configService.get<string>('appEnv') != 'development' &&
