@@ -522,7 +522,7 @@ export class AuthService {
     const resp = await firstValueFrom(
       this.httpService.request({
         method: 'get',
-        baseURL: this.configService.get<string>('warehouse_url')+'/api/v1/stores/details?stores='+storeId,
+        baseURL: this.configService.get<string>('warehouse_url')+'/api/v1/stores?ids='+storeId,
         headers: {
         'content-type': 'application/json',
         'rz-auth-key': this.configService.get<string>('rz_auth_key'),
