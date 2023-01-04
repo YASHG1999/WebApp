@@ -460,6 +460,19 @@ export class AuthService {
       );
     }
 
+    const userStoreMapping = await this.userStoreMappingRepository.count({
+      where: {
+        user_id: user.id,
+        is_active: true,
+      },
+    });
+
+    if (userStoreMapping < 1)
+      throw new HttpException(
+        { message: 'User does not have a mapped store' },
+        HttpStatus.BAD_REQUEST,
+      );
+
     const tokens = await this.jwtTokenService.getTokensNew({
       userId: user.id,
       roles: user.roles,
@@ -487,7 +500,6 @@ export class AuthService {
         { message: 'User does not have a mapped store' },
         HttpStatus.BAD_REQUEST,
       );
-      return;
     }
     const stores = [];
     userStoreMapping.forEach((element) => {
