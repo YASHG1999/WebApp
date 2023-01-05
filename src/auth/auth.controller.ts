@@ -104,13 +104,10 @@ export class AuthController {
     return m;
   }
 
-  
   @Roles(UserRole.FRANCHISEOWNER)
   @Get('franchise-store/list')
   @HttpCode(HttpStatus.OK)
-  getFranchiseStores(
-    @Headers('userId') userId,
-  ) {
+  getFranchiseStores(@Headers('userId') userId) {
     const m = this.authService.getStores(userId);
     return m;
   }

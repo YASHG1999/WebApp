@@ -36,7 +36,7 @@ export default (): Config => {
     gupshup_pwd: processEnv.GUPSHUP_PASSWORD,
     gupshup_url: processEnv.GUPSHUP_URL,
     sms_whitelist: JSON.parse(processEnv.SMS_WHITELIST) || ['9876543210'],
-    warehouse_url:processEnv.WAREHOUSE_URL,
-    rz_auth_key:processEnv.RZ_AUTH_KEY,
+    warehouse_url: processEnv.WAREHOUSE_URL,
+    rz_auth_key: processEnv.RZ_AUTH_KEY,
   };
 };

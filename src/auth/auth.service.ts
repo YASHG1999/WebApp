@@ -11,7 +11,7 @@ import { UserRole } from '../user/enum/user.role';
 import { HttpService } from '@nestjs/axios';
 import { SmsService } from '../core/sms/sms.service';
 import { UserEntity } from '../user/user.entity';
-import { DataSource, MoreThan, Repository } from 'typeorm';
+import { DataSource, LessThanOrEqual, MoreThan, Repository } from 'typeorm';
 import { OtpTokensEntity } from './otp-tokens.entity';
 import { RefreshTokenEntity } from './refresh-token.entity';
 import { add, isBefore } from 'date-fns';
@@ -47,7 +47,11 @@ export class AuthService {
 
   async generateOtp(userId, otpDto: OtpDto) {
     await this.otpTokensRepository.update(
-      { phone_number: otpDto.phone_number },
+      {
+        phone_number: otpDto.phone_number,
+        valid_till: LessThanOrEqual(new Date(Date.now())),
+        is_active: true,
+      },
       { is_active: false },
     );
 
@@ -90,56 +94,7 @@ export class AuthService {
         message: 'otp sent successfully',
       };
     } else {
-      let otp = '123456';
-      if (
-        this.configService.get<string>('appEnv') !== 'development' &&
-        !this.existsInWhitelist(otpDto.phone_number)
-      ) {
-        otp = generate(this.configService.get('otp_digits'), {
-          lowerCaseAlphabets: false,
-          upperCaseAlphabets: false,
-          specialChars: false,
-        });
-      }
-
-      const otp_valid_time = add(new Date(Date.now()), {
-        minutes: this.configService.get('otp_expiry_in_minutes'),
-      });
-
-      const otpData = await this.otpTokensRepository.findOne({
-        where: {
-          phone_number: otpDto.phone_number,
-          valid_till: MoreThan(new Date(Date.now())),
-          is_active: true,
-        },
-        order: { created_at: 'desc' },
-      });
-
-      // limit check on otp
-      if (otpData == null) {
-        await this.otpTokensRepository.save({
-          verification_type: 'GUPSHUP',
-          otp: otp,
-          phone_number: otpDto.phone_number,
-          user_id: userId,
-          valid_till: otp_valid_time,
-          retries_count: 0,
-          is_active: true,
-        });
-      } else if (otpData.retries_count > otpData.retries_allowed) {
-        throw new HttpException(
-          { message: 'OTP retry count exceeded' },
-          HttpStatus.BAD_REQUEST,
-        );
-      } else {
-        otpData.otp = otp;
-        otpData.retries_count = otpData
-          ? otpData.retries_count
-            ? otpData.retries_count + 1
-            : 1
-          : 1;
-        await this.otpTokensRepository.save(otpData);
-      }
+      const otp = await this.getOtp(userId, otpDto);
 
       if (
         this.configService.get<string>('appEnv') !== 'development' &&
@@ -178,19 +133,18 @@ export class AuthService {
   }
 
   existsInWhitelist(phone_number: string): boolean {
-    const list = this.configService.get<string[]>('sms_whitelist');
     return this.configService
       .get<string[]>('sms_whitelist')
       .includes(phone_number);
   }
 
   async verifyOtp(verifyOtpDto: VerifyOtpDto, requiredRole?: string) {
-    let otpToken = await this.otpTokensRepository.findOne({
+    const otpToken = await this.otpTokensRepository.findOne({
       where: {
         phone_number: verifyOtpDto.phone_number,
         is_active: true,
       },
-      order: { updated_at: 'desc' },
+      order: { created_at: 'desc' },
     });
 
     if (
@@ -237,51 +191,27 @@ export class AuthService {
 
       return { ...tokens, user };
     } else {
-      //retry check, order by - updated_at
-      otpToken = await this.otpTokensRepository.findOne({
-        where: {
-          phone_number: verifyOtpDto.phone_number,
-          otp: verifyOtpDto.otp,
-          is_active: true,
-        },
-        order: { updated_at: 'desc' },
-      });
-
-      if (otpToken == null) {
-        throw new HttpException(
-          { message: 'OTP does not match' },
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-
-      if (otpToken.retries_count > otpToken.retries_allowed) {
-        throw new HttpException(
-          { message: 'OTP retry count exceeded' },
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-
-      if (isBefore(otpToken.valid_till, new Date(Date.now()))) {
-        throw new HttpException(
-          { message: 'OTP has expired' },
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-
-      otpToken.is_active = false;
-      await this.otpTokensRepository.save(otpToken);
+      await this.validateOTP(otpToken, verifyOtpDto);
 
       let user = await this.userService.getUserFromPhone(
         verifyOtpDto.phone_number,
       );
 
       if (requiredRole) {
-        if (!user || user.roles.indexOf(UserRole[requiredRole]) < 0)
+        if (!user || user.roles.indexOf(UserRole[requiredRole]) < 0) {
+          otpToken.retries_count = otpToken.retries_count
+            ? otpToken.retries_count + 1
+            : 1;
+          await this.otpTokensRepository.save(otpToken);
           throw new HttpException(
             { message: 'Access forbidden' },
             HttpStatus.FORBIDDEN,
           );
+        }
       }
+
+      otpToken.is_active = false;
+      await this.otpTokensRepository.save(otpToken);
 
       if (user == null) {
         user = await this.userRepository.save({
@@ -290,9 +220,19 @@ export class AuthService {
           roles: [UserRole.VISITOR, UserRole.CONSUMER],
           is_verified: true,
         });
-      } else if (user.is_verified == false) {
-        user.is_verified = true;
-        user = await this.userRepository.save(user);
+      } else {
+        let userChanged = false;
+        if (!user.roles.includes(UserRole.CONSUMER)) {
+          user.roles.push(UserRole.CONSUMER);
+          userChanged = true;
+        }
+
+        if (user.is_verified == false) {
+          user.is_verified = true;
+          userChanged = true;
+        }
+
+        if (userChanged) await this.userRepository.save(user);
       }
 
       const tokens = await this.jwtTokenService.getTokens(user.id, user.roles);
@@ -361,30 +301,42 @@ export class AuthService {
     };
   }
 
-  checkOtpValidity(otpToken: OtpTokensEntity) {
-    if (otpToken == null) {
+  async validateOTP(otpToken: OtpTokensEntity, verifyOtpDto: VerifyOtpDto) {
+    if (otpToken == null)
       throw new HttpException(
-        { message: 'OTP does not match' },
+        { message: 'OTP not in use' },
+        HttpStatus.BAD_REQUEST,
+      );
+
+    if (isBefore(otpToken.valid_till, new Date(Date.now()))) {
+      otpToken.is_active = false;
+      await this.otpTokensRepository.save(otpToken);
+      throw new HttpException(
+        { message: 'OTP has expired' },
         HttpStatus.BAD_REQUEST,
       );
     }
 
-    if (otpToken.retries_count > otpToken.retries_allowed) {
+    if (otpToken.retries_count >= otpToken.retries_allowed) {
       throw new HttpException(
         { message: 'OTP retry count exceeded' },
         HttpStatus.BAD_REQUEST,
       );
     }
 
-    if (isBefore(otpToken.valid_till, new Date(Date.now()))) {
+    if (otpToken.otp != verifyOtpDto.otp) {
+      otpToken.retries_count = otpToken.retries_count
+        ? otpToken.retries_count + 1
+        : 1;
+      await this.otpTokensRepository.save(otpToken);
       throw new HttpException(
-        { message: 'OTP has expired' },
+        { message: 'OTP does not match' },
         HttpStatus.BAD_REQUEST,
       );
     }
   }
 
-  getOtp(otpDto: OtpDto) {
+  async getOtp(userId, otpDto: OtpDto) {
     let otp = '123456';
     if (
       this.configService.get('appEnv') != 'development' &&
@@ -395,6 +347,44 @@ export class AuthService {
         upperCaseAlphabets: false,
         specialChars: false,
       });
+    }
+    const otp_valid_time = add(new Date(Date.now()), {
+      minutes: this.configService.get('otp_expiry_in_minutes'),
+    });
+
+    const otpData = await this.otpTokensRepository.findOne({
+      where: {
+        phone_number: otpDto.phone_number,
+        valid_till: MoreThan(new Date(Date.now())),
+        is_active: true,
+      },
+      order: { created_at: 'desc' },
+    });
+
+    if (otpData == null) {
+      await this.otpTokensRepository.save({
+        verification_type: 'GUPSHUP',
+        otp: otp,
+        phone_number: otpDto.phone_number,
+        user_id: userId,
+        valid_till: otp_valid_time,
+        retries_count: 0,
+        is_active: true,
+      });
+    } else if (otpData.retries_count >= otpData.retries_allowed) {
+      throw new HttpException(
+        { message: 'OTP retry count exceeded' },
+        HttpStatus.BAD_REQUEST,
+      );
+    } else {
+      otp = otpData.otp;
+      otpData.retries_count = otpData
+        ? otpData.retries_count
+          ? otpData.retries_count + 1
+          : 1
+        : 1;
+      otpData.valid_till = otp_valid_time;
+      await this.otpTokensRepository.save(otpData);
     }
     return otp;
   }
@@ -416,25 +406,15 @@ export class AuthService {
     }
 
     await this.otpTokensRepository.update(
-      { phone_number: otpDto.phone_number },
+      {
+        phone_number: otpDto.phone_number,
+        valid_till: LessThanOrEqual(new Date(Date.now())),
+        is_active: true,
+      },
       { is_active: false },
     );
 
-    const otp = this.getOtp(otpDto);
-
-    const otp_valid_time = add(new Date(Date.now()), {
-      minutes: this.configService.get('otp_expiry_in_minutes'),
-    });
-
-    await this.otpTokensRepository.save({
-      verification_type: 'GUPSHUP',
-      otp: otp,
-      phone_number: otpDto.phone_number,
-      user_id: user.id,
-      valid_till: otp_valid_time,
-      retries_count: 0,
-      is_active: true,
-    });
+    const otp = await this.getOtp(user.id, otpDto);
 
     if (
       this.configService.get<string>('appEnv') != 'development' &&
@@ -459,13 +439,12 @@ export class AuthService {
     const otpToken = await this.otpTokensRepository.findOne({
       where: {
         phone_number: verifyOtpDto.phone_number,
-        otp: verifyOtpDto.otp,
         is_active: true,
       },
       order: { updated_at: 'desc' },
     });
 
-    this.checkOtpValidity(otpToken);
+    await this.validateOTP(otpToken, verifyOtpDto);
 
     otpToken.is_active = false;
     await this.otpTokensRepository.save(otpToken);
@@ -480,7 +459,20 @@ export class AuthService {
         HttpStatus.BAD_REQUEST,
       );
     }
-   
+
+    const userStoreMapping = await this.userStoreMappingRepository.count({
+      where: {
+        user_id: user.id,
+        is_active: true,
+      },
+    });
+
+    if (userStoreMapping < 1)
+      throw new HttpException(
+        { message: 'User does not have a mapped store' },
+        HttpStatus.BAD_REQUEST,
+      );
+
     const tokens = await this.jwtTokenService.getTokensNew({
       userId: user.id,
       roles: user.roles,
@@ -494,13 +486,13 @@ export class AuthService {
     return { ...tokens, user };
   }
 
-  async getStores(userId){
+  async getStores(userId) {
     const userStoreMapping = await this.userStoreMappingRepository.find({
       where: {
         user_id: userId,
         is_active: true,
       },
-      select: ['store_id']
+      select: ['store_id'],
     });
 
     if (userStoreMapping.length == 0) {
@@ -508,37 +500,37 @@ export class AuthService {
         { message: 'User does not have a mapped store' },
         HttpStatus.BAD_REQUEST,
       );
-      return;
     }
-    const stores=[];
-     userStoreMapping.forEach(element => {
+    const stores = [];
+    userStoreMapping.forEach((element) => {
       stores.push(element.store_id);
      });
     return this.getStoreInfo(stores);
   }
 
   async getStoreInfo(storeId: any): Promise<any> {
-   try{
-    const resp = await firstValueFrom(
-      this.httpService.request({
-        method: 'get',
-        baseURL: this.configService.get<string>('warehouse_url')+'/api/v1/stores?ids='+storeId,
-        headers: {
-        'content-type': 'application/json',
-        'rz-auth-key': this.configService.get<string>('rz_auth_key'),
-        },
-      }),
-    );
-    return resp.data;
-  } catch (e) {
-    console.log(e);
-    throw new HttpException(
-      { message: 'Something went wrong while fetching data from Warehouse.' },
-      HttpStatus.INTERNAL_SERVER_ERROR,
-    );
+    try {
+      const resp = await firstValueFrom(
+        this.httpService.request({
+          method: 'get',
+          baseURL:
+            this.configService.get<string>('warehouse_url') +
+            '/api/v1/stores?ids='+storeId,
+          headers: {
+            'content-type': 'application/json',
+            'rz-auth-key': this.configService.get<string>('rz_auth_key'),
+          },
+        }),
+      );
+      return resp.data;
+    } catch (e) {
+      console.log(e);
+      throw new HttpException(
+        { message: 'Something went wrong while fetching data from Warehouse.' },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
-}
-  
 
   async registerFranchiseStore(
     userId,
