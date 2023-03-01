@@ -42,8 +42,10 @@ export class ProductsService {
     updatedBy: string,
   ){
     let product = null;
+    console.log(productBody);
     let existingProduct:ProductsEntity = null;
-    
+
+
       existingProduct = await this.productsRepository.findOneBy({ id: productId });
       existingProduct.packet_description = productBody.packet_description;
      return existingProduct;

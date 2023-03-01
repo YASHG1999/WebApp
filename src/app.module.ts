@@ -11,6 +11,9 @@ import {UserAddressModule} from "./user_address/user_address.module";
 import { PaymentModule } from './payment/payment.module';
 import {ProductsEntity} from "./products/entities/product.entity";
 import {UserEntity} from "./user/user.entity";
+import {CategoryEntity} from "./category/entity/category.entity";
+import {UserAddressEntity} from "./user_address/user_address.entity";
+import {OrderEntity} from "./order/order.entity";
 
 @Module({
   imports: [
@@ -23,7 +26,8 @@ import {UserEntity} from "./user/user.entity";
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         url: configService.get('DATABASE_URL'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}',ProductsEntity,UserEntity ],
+        entities: [__dirname + '/**/*.entity{.ts,.js}',ProductsEntity,UserEntity,
+          CategoryEntity , UserAddressEntity ,OrderEntity],
       }),
      inject: [ConfigService] ,
     }),
