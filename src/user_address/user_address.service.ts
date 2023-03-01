@@ -10,7 +10,7 @@ import { UpdateAddressAdminDto } from './dto/update_address_admin.dto';
 export class UserAddressService {
   constructor(private dataSource: DataSource) {}
 
-  async createUserAddress(
+  async  createUserAddress(
     addressBody: CreateAddressDto,
     user_id: string,
   ): Promise<UserAddressEntity> {
@@ -40,7 +40,7 @@ export class UserAddressService {
         is_active: true,
       })
       .returning(
-        'user_id, name, type, is_default, address_line_1, address_line_2, landmark, city, state, pincode, contact_number, lat, long',
+        'user_id, name, type, is_default, address_line_1, address_line_2, landmark, city, state, pincode',
       )
       .execute();
 
@@ -141,27 +141,7 @@ export class UserAddressService {
     return address;
   }
 
-  async getUserAddressesbyRefInternal(
-    refId: number,
-  ): Promise<UserAddressEntity> {
-    const userRepository = this.dataSource.getRepository(UserAddressEntity);
 
-    const address = await userRepository
-      .createQueryBuilder()
-      .where({
-        lithos_ref: refId,
-      })
-      .getOne();
-
-    if (!address) {
-      throw new HttpException(
-        { message: 'Ref not found' },
-        HttpStatus.NOT_FOUND,
-      );
-    }
-
-    return address;
-  }
 
   async updateUserAddressByAdmin(
     addressBody: UpdateAddressAdminDto,
@@ -188,7 +168,6 @@ export class UserAddressService {
     address.state = addressBody.state;
     address.landmark = addressBody.landmark;
     address.pincode = addressBody.pincode;
-    address.contact_number = addressBody.contact_number;
     address.updated_by = user_id;
 
     return await userAddressRepository.save(address);

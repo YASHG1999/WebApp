@@ -16,13 +16,6 @@ export class CreateAddressDto {
   @IsString()
   type: string;
 
-  @IsNumber()
-  @ApiProperty()
-  lat: number;
-
-  @IsNumber()
-  @ApiProperty()
-  long: number;
 
   @IsBoolean()
   @ApiPropertyOptional()
@@ -57,8 +50,5 @@ export class CreateAddressDto {
   @IsOptional()
   pincode: number;
 
-  @ApiProperty()
-  @IsString()
-  @IsOptional()
-  contact_number: string;
+
 }

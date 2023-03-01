@@ -20,13 +20,6 @@ export class UserAddressEntity extends CommonEntity {
   @ApiProperty()
   type: string;
 
-  @Column('double precision', { nullable: true })
-  @ApiPropertyOptional()
-  lat?: number;
-
-  @Column('double precision', { nullable: true })
-  @ApiPropertyOptional()
-  long?: number;
 
   @ApiPropertyOptional()
   @Column({ default: null, nullable: true })
@@ -60,10 +53,5 @@ export class UserAddressEntity extends CommonEntity {
   @Column({ default: true })
   is_active: boolean;
 
-  @ApiPropertyOptional()
-  @Column({ nullable: true })
-  contact_number: string;
 
-  @Column({ nullable: true, default: null })
-  lithos_ref: number;
 }

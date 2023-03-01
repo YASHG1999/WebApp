@@ -18,45 +18,6 @@ export class EnvironmentVariables {
   @IsNotEmpty()
   @Expose()
   DATABASE_URL!: string;
-
-  @Expose()
-  AT_SECRET?: string;
-
-  @Expose()
-  RT_SECRET?: string;
-
-  @Expose()
-  AT_EXPIRY?: string;
-
-  @Expose()
-  RT_EXPIRY?: string;
-
-  @Expose()
-  OTP_EXPIRY_IN_MINUTES?: number;
-
-  @Expose()
-  OTP_DIGITS?: number;
-
-  @Expose()
-  ISS?: string;
-
-  @Expose()
-  GUPSHUP_USERID: string;
-
-  @Expose()
-  GUPSHUP_PASSWORD: string;
-
-  @Expose()
-  GUPSHUP_URL: string;
-
-  @Expose()
-  SMS_WHITELIST: string;
-
-  @Expose()
-  WAREHOUSE_URL: string;
-
-  @Expose()
-  RZ_AUTH_KEY: string;
 }
 
 export function validate(config: Record<string, unknown>) {

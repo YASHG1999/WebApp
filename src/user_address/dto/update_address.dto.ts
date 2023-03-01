@@ -23,16 +23,6 @@ export class UpdateAddressDto {
   @IsOptional()
   type: string;
 
-  @IsNumber()
-  @ApiPropertyOptional()
-  @IsOptional()
-  lat: number;
-
-  @IsNumber()
-  @ApiProperty()
-  @IsOptional()
-  long: number;
-
   @IsBoolean()
   @ApiPropertyOptional()
   @ApiPropertyOptional()
@@ -69,8 +59,4 @@ export class UpdateAddressDto {
   @IsOptional()
   pincode: number;
 
-  @ApiPropertyOptional()
-  @IsString()
-  @IsOptional()
-  contact_number: string;
 }

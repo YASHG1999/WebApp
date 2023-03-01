@@ -1,18 +1,16 @@
-import { MiddlewareConsumer, Module } from '@nestjs/common';
-import { UserModule } from './user/user.module';
-import { AuthModule } from './auth/auth.module';
+// import { UserModule } from './user/user.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { JwtTokenModule } from './core/jwt-token/jwt-token.module';
-import { SmsModule } from './core/sms/sms.module';
-import { CommonModule } from './core/common/common.module';
-import { APP_GUARD } from '@nestjs/core';
-import { RolesGuard } from './core/guards/roles.guard';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UserAddressModule } from './user_address/user_address.module';
-import configuration from './config/configuration';
 import { validate } from './config/env.validation';
-import { RequestLoggingMiddleware } from './core/logging.middleware';
-import { UserStoreMappingModule } from './user_store/user-store-mapping.module';
+import configuration from './config/configuration';
+import { Module } from '@nestjs/common/decorators';
+import { ProductsModule } from './products/products.module';
+import { CategoryModule } from './category/category.module';
+import { JwtModule} from "@nestjs/jwt";
+import {UserAddressModule} from "./user_address/user_address.module";
+import { PaymentModule } from './payment/payment.module';
+import {ProductsEntity} from "./products/entities/product.entity";
+import {UserEntity} from "./user/user.entity";
 
 @Module({
   imports: [
@@ -25,29 +23,26 @@ import { UserStoreMappingModule } from './user_store/user-store-mapping.module';
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         url: configService.get('DATABASE_URL'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
+        entities: [__dirname + '/**/*.entity{.ts,.js}',ProductsEntity,UserEntity ],
       }),
-      inject: [ConfigService],
+     inject: [ConfigService] ,
     }),
-    UserModule,
-    AuthModule,
-    JwtTokenModule,
-    SmsModule,
-    CommonModule,
-    UserAddressModule,
-    UserStoreMappingModule,
+
+    // UserModule,
+    ProductsModule,
+    CategoryModule,
+      JwtModule,
+      UserAddressModule,
+      PaymentModule,
+   
+    
+   
   ],
   controllers: [],
   providers: [
-    {
-      provide: APP_GUARD,
-      useClass: RolesGuard,
-    },
-    RequestLoggingMiddleware,
+    
   ],
 })
 export class AppModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(RequestLoggingMiddleware).forRoutes('*');
-  }
+ 
 }
