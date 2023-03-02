@@ -6,6 +6,7 @@ import axios from 'axios';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ProductsEntity } from './entities/product.entity';
 import { id } from 'date-fns/locale';
+import {CategoryEntity} from "../category/entity/category.entity";
 
 
 
@@ -13,15 +14,15 @@ import { id } from 'date-fns/locale';
   
 @Injectable()
 export class ProductsService {
-  constructor(
-    
+  constructor(private dataSource: DataSource,
+
     @InjectRepository(ProductsEntity)
     private readonly productsRepository: Repository<ProductsEntity>,
 
-    
+
   ) {}
-  
- 
+
+
   async createProduct(
     productBody: CreateProductDto,
     updatedBy: string,
@@ -33,7 +34,7 @@ export class ProductsService {
         updated_by: updatedBy,
       });
       return product;
-      
+
   }
 
   async updateProduct(
@@ -49,15 +50,20 @@ export class ProductsService {
       existingProduct = await this.productsRepository.findOneBy({ id: productId });
       existingProduct.packet_description = productBody.packet_description;
      return existingProduct;
-      
+
     }
 
-  async getAllProduct(filters: any = {}) {
-    const filter: {
-      id?: number;
-    } = {};
-    if (filters?.id) filter.id = filters.id;
-    };
+  async getAllProduct(){
+  const userRepository = this.dataSource.getRepository(ProductsEntity);
+  return await userRepository.find({where:{is_active:true}});
+}
+
+  // (filters: any = {}) {
+  //   const filter: {
+  //     id?: number;
+  //   } = {};
+  //   if (filters?.id) filter.id = filters.id;
+  //   };
   
 
     

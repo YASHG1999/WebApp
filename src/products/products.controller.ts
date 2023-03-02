@@ -11,12 +11,11 @@ import { Roles, UserRole } from 'src/core/common/custom.decorator';
 
 
 @Controller('products')
-@ApiTags('products') 
-
+@ApiTags('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
-
+//doubt on readonly does it effects update api??
   @ApiBody({ type: CreateProductDto })
   @Post()
   @Roles(UserRole.ADMIN)

@@ -4,22 +4,22 @@ import { CommonEntity } from '../core/common/common.entity';
 @Entity({ name: 'order', schema: 'public' })
 export class OrderEntity extends CommonEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  order_id: string;
 
   @Column()
-  order_id: string;
+  id: string;
 
   @Column()
   product_name: string;
 
   @Column()
-  order_quantity: string;
+  quantity: number;
 
   @Column()
-  order_sumbitted_at: string;
+  order_submitted_at: string;
 
   @Column()
-  final_amount: string;
+  price: string;
 
   @Column()
   status: number;

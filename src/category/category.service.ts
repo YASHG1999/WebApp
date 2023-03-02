@@ -36,9 +36,7 @@ export class CategoryService {
     let existingCategory:CategoryEntity = null;
 
       existingCategory = await this.categoryRepository.findOneBy({ id : categoryId});
-      
-      
-     
+
     }
 
   async getAllCategory() {

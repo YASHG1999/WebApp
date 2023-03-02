@@ -6,7 +6,7 @@ import {
     IsString,
 
 } from 'class-validator';
-export class CreateProductDto {
+export class CreateOrderDto {
 
     @IsNumber()
     @ApiProperty()
@@ -18,7 +18,7 @@ export class CreateProductDto {
 
     @IsNumber()
     @ApiPropertyOptional()
-    final_amount: string;
+    price: number;
 
     @ApiPropertyOptional()
     @IsString()
@@ -32,7 +32,7 @@ export class CreateProductDto {
 
     @IsNumber()
     @ApiProperty()
-    order_quantity: string;
+    quantity: number;
 
     @ApiPropertyOptional()
     @IsOptional()
@@ -40,11 +40,9 @@ export class CreateProductDto {
 
     @IsNumber()
     @ApiPropertyOptional()
-    order_sumbitted_at: string;
+    order_submitted_at: string;
 
 
 }
 
 
-export class CreateOrderDto {
-}

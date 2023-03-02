@@ -19,7 +19,7 @@ export class UpdateOrderDto {
 
     @IsNumber()
     @ApiPropertyOptional()
-    final_amount: string;
+    price: number;
 
     @ApiPropertyOptional()
     @IsString()
@@ -33,7 +33,7 @@ export class UpdateOrderDto {
 
     @IsNumber()
     @ApiProperty()
-    order_quantity: string;
+    quantity: number;
 
     @ApiPropertyOptional()
     @IsOptional()
@@ -41,7 +41,7 @@ export class UpdateOrderDto {
 
     @IsNumber()
     @ApiPropertyOptional()
-    order_sumbitted_at: string;
+    order_submitted_at: string;
 
 
 }

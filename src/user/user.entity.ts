@@ -3,7 +3,7 @@ import { UserRole } from './enum/user.role';
 import Any = jasmine.Any;
 import { CommonEntity } from '../core/common/common.entity';
 
-@Entity({ name: 'user', schema: 'public' })
+@Entity({ name: 'users', schema: 'public' })
 export class UserEntity extends CommonEntity {
   @PrimaryGeneratedColumn()
   id: number;
@@ -18,20 +18,19 @@ export class UserEntity extends CommonEntity {
   last_name: string;
 
   @Column()
-  phone_number: string;
+  phone_no: string;
 
   @Column()
   email: string;
 
-  
-
-  @Column({ default: true })
-  is_active: boolean;
-
-
+  @Column()
+  password: string;
 
   @Column()
   role:number;
+
+  @Column({ default: true })
+  is_active: boolean;
 
   @Column()
   is_deleted: boolean;

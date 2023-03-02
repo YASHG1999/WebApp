@@ -18,6 +18,8 @@ export class CategoryEntity {
 
   @Column({ default: true })
   is_active: boolean;
+   @Column()
+  description: string;
 
 }
 

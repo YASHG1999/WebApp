@@ -54,7 +54,7 @@ export class OrderService {
       order_id: Id,
     });
 
-    await this.orderRepository.update({ id: Id }, { is_deleted: true });
+    await this.orderRepository.update({ order_id: Id }, { is_deleted: true });
 
     return {
       success: true,

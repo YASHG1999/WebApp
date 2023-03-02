@@ -18,12 +18,11 @@ import {UpdateOrderDto} from "./dto/UpdateOrderDto";
 
 
 @Controller('order')
-@ApiTags('Order')
-
+@ApiTags('order')
 export class OrderController {
     constructor(private orderService: OrderService) {}
 
-
+    @ApiBody({type: CreateOrderDto})
     @Post('/create')
     createOrder(
         @Body() reqBody: CreateOrderDto,
