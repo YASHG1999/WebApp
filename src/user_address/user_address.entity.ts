@@ -2,8 +2,8 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 import { CommonEntity } from '../core/common/common.entity';
 
-@Entity({ name: 'addresses', schema: 'auth' })
-export class UserAddressEntity extends CommonEntity {
+@Entity({ name: 'user_address', schema: 'public' })
+export class UserAddressEntity /*extends CommonEntity*/{
   @ApiProperty()
   @PrimaryGeneratedColumn()
   id: bigint;
@@ -16,22 +16,17 @@ export class UserAddressEntity extends CommonEntity {
   @ApiProperty()
   name: string;
 
-  @Column()
-  @ApiProperty()
-  type: string;
-
-
   @ApiPropertyOptional()
   @Column({ default: null, nullable: true })
   is_default?: boolean;
 
   @ApiProperty()
   @Column()
-  address_line_1: string;
+  address_line1: string;
 
   @ApiPropertyOptional()
   @Column({ nullable: true })
-  address_line_2: string;
+  address_line2: string;
 
   @ApiPropertyOptional()
   @Column({ nullable: true })
@@ -47,6 +42,10 @@ export class UserAddressEntity extends CommonEntity {
 
   @ApiPropertyOptional()
   @Column({ nullable: true })
+  country: string;
+
+  @ApiPropertyOptional()
+  @Column({ nullable: true })
   pincode: number;
 
   @ApiPropertyOptional()
@@ -55,3 +54,4 @@ export class UserAddressEntity extends CommonEntity {
 
 
 }
+ //12 entities

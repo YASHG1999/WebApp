@@ -6,6 +6,7 @@ import {
   IsString,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {Column} from "typeorm";
 
 export class CreateAddressDto {
   @ApiPropertyOptional()
@@ -13,8 +14,18 @@ export class CreateAddressDto {
   @IsString()
   name: string;
 
+  @ApiPropertyOptional()
+  id: bigint;
+
+  @IsOptional()
   @IsString()
-  type: string;
+  @ApiProperty()
+  user_id: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  country: string;
+
 
 
   @IsBoolean()
@@ -24,12 +35,12 @@ export class CreateAddressDto {
 
   @ApiProperty()
   @IsString()
-  address_line_1: string;
+  address_line1: string;
 
   @ApiPropertyOptional()
   @IsString()
   @IsOptional()
-  address_line_2: string;
+  address_line2: string;
 
   @ApiProperty()
   @IsString()
@@ -52,3 +63,7 @@ export class CreateAddressDto {
 
 
 }
+
+
+
+

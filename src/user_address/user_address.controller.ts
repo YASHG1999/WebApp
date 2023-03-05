@@ -11,8 +11,8 @@ import {
 } from '@nestjs/common';
 import { ApiBody, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '../core/http-exception.filter';
-import { Roles } from 'src/core/common/custom.decorator';
-import { UserRole } from 'src/user/enum/user.role';
+// import { Roles } fr om 'src/core/common/custom.decorator';
+// import { UserRole } from 'src/user/enum/user.role';
 import { CreateAddressDto } from './dto/create_address.dto';
 import { UserAddressService } from './user_address.service';
 import { UpdateAddressDto } from './dto/update_address.dto';
@@ -27,7 +27,7 @@ export class UserAddressController {
   @ApiBody({ type: UpdateAddressDto })
   @ApiResponse({ type: UserAddressEntity })
   @ApiParam({ name: 'addressId', required: true })
-  @Roles(UserRole.CONSUMER)
+  // @Roles(UserRole.CONSUMER)
   @Patch('/:addressId')
   updateUserAddress(
     @Body() reqBody: UpdateAddressDto,
@@ -40,7 +40,7 @@ export class UserAddressController {
 
   @ApiBody({ type: CreateAddressDto })
   @ApiResponse({ type: UserAddressEntity })
-  @Roles(UserRole.CONSUMER)
+  // @Roles(UserRole.CONSUMER)
   @Post()
   createUserAddress(
     @Body() reqBody: CreateAddressDto,
@@ -50,13 +50,13 @@ export class UserAddressController {
   }
 
   @ApiResponse({ type: [UserAddressEntity] })
-  @Roles(UserRole.CONSUMER)
+  // @Roles(UserRole.CONSUMER)
   @Get()
   getUserAddresses(@Headers('userId') userId): Promise<UserAddressEntity[]> {
     return this.userAddressService.getUserAddresses(userId);
   }
 
-  @Roles(UserRole.CONSUMER)
+  // @Roles(UserRole.CONSUMER)
   @Delete('/:addressId')
   @ApiParam({ name: 'addressId', required: true })
   deleteUserAddresses(

@@ -1,27 +1,41 @@
-import { DataSource } from 'typeorm';
+import {DataSource, Repository} from 'typeorm';
 import { CreateAddressDto } from './dto/create_address.dto';
-import { CreateAddressInternalDto } from './dto/create_address.internal.dto';
+// import { CreateAddressInternalDto } from './dto/create_address.internal.dto';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { UserAddressEntity } from './user_address.entity';
 import { UpdateAddressDto } from './dto/update_address.dto';
-import { UpdateAddressAdminDto } from './dto/update_address_admin.dto';
+import {InjectRepository} from "@nestjs/typeorm";
+import {ProductsEntity} from "../products/entities/product.entity";
+// import { UpdateAddressAdminDto } from './dto/update_address_admin.dto';
 
 @Injectable()
 export class UserAddressService {
-  constructor(private dataSource: DataSource) {}
+  constructor(private dataSource: DataSource,
+
+  @InjectRepository(UserAddressEntity)
+  private readonly user_addressRepository: Repository<UserAddressEntity>,
+) {}
 
   async  createUserAddress(
     addressBody: CreateAddressDto,
-    user_id: string,
-  ): Promise<UserAddressEntity> {
-    const userRepository = this.dataSource.getRepository(UserAddressEntity);
-    const body = {
+    updatedBy: string,
+    // user_id: string,
+  ) {
+    let user_address: UserAddressEntity = null;
+    console.log(addressBody);
+    user_address = await this.user_addressRepository.save({
       ...addressBody,
-      user_id,
-      is_active: true,
-      updated_by: user_id,
-    };
-    return await userRepository.save(body);
+      updated_by: updatedBy,
+    });
+    // const userRepository = this.dataSource.getRepository(UserAddressEntity);
+    // const body = {
+    //   ...addressBody,
+    //   user_id,
+    //   is_active: true,
+    //   updated_by: user_id,
+    // };
+    // return await userRepository.save(body);
+    return user_address;
   }
 
   async updateUserAddress(
@@ -40,7 +54,7 @@ export class UserAddressService {
         is_active: true,
       })
       .returning(
-        'user_id, name, type, is_default, address_line_1, address_line_2, landmark, city, state, pincode',
+        'user_id, name, is_default, address_line_1, address_line_2, landmark, city, state, pincode',
       )
       .execute();
 
@@ -67,16 +81,16 @@ export class UserAddressService {
       is_active: true,
     });
   }
-
-  async getUserAddressesByUserIdInternal(
-    user_id: string,
-  ): Promise<UserAddressEntity[]> {
-    const userRepository = this.dataSource.getRepository(UserAddressEntity);
-    return await userRepository.findBy({
-      user_id: user_id,
-      //is_active: true,
-    });
-  }
+  //
+  // async getUserAddressesByUserIdInternal(
+  //   user_id: string,
+  // ): Promise<UserAddressEntity[]> {
+  //   const userRepository = this.dataSource.getRepository(UserAddressEntity);
+  //   return await userRepository.findBy({
+  //     user_id: user_id,
+  //     //is_active: true,
+  //   });
+  // }
 
   async deleteUserAddress(
     user_id: string,
@@ -104,81 +118,81 @@ export class UserAddressService {
 
     return { deleted: true };
   }
-
-  async createUserAddressInternal(
-    addressBody: CreateAddressInternalDto,
-    user_id: string,
-  ): Promise<UserAddressEntity> {
-    const userRepository = this.dataSource.getRepository(UserAddressEntity);
-    const body = {
-      ...addressBody,
-      is_active: false,
-      type: 'OTHER',
-      updated_by: user_id,
-    };
-    return await userRepository.save(body);
-  }
-
-  async getUserAddressesInternal(
-    addressId: number,
-  ): Promise<UserAddressEntity> {
-    const userRepository = this.dataSource.getRepository(UserAddressEntity);
-
-    const address = await userRepository
-      .createQueryBuilder()
-      .where({
-        id: addressId,
-      })
-      .getOne();
-
-    if (!address) {
-      throw new HttpException(
-        { message: 'Address is not found' },
-        HttpStatus.NOT_FOUND,
-      );
-    }
-
-    return address;
-  }
-
-
-
-  async updateUserAddressByAdmin(
-    addressBody: UpdateAddressAdminDto,
-    user_id: string,
-    addressId: bigint,
-  ): Promise<UserAddressEntity> {
-    const userAddressRepository =
-      this.dataSource.getRepository(UserAddressEntity);
-
-    const address = await userAddressRepository.findOne({
-      where: { id: addressId },
-    });
-
-    if (address == null) {
-      throw new HttpException(
-        { message: 'Address not found' },
-        HttpStatus.NOT_FOUND,
-      );
-    }
-
-    address.address_line_1 = addressBody.address_line_1;
-    address.address_line_2 = addressBody.address_line_2;
-    address.city = addressBody.city;
-    address.state = addressBody.state;
-    address.landmark = addressBody.landmark;
-    address.pincode = addressBody.pincode;
-    address.updated_by = user_id;
-
-    return await userAddressRepository.save(address);
-  }
-
-  async getUserAddressesByAdmin(user_id: string): Promise<UserAddressEntity[]> {
-    const userAddressRepository =
-      this.dataSource.getRepository(UserAddressEntity);
-    return await userAddressRepository.findBy({
-      user_id: user_id,
-      is_active: true,
-    });
-  }
+  //
+  // async createUserAddressInternal(
+  //   addressBody: CreateAddressDto,
+  //   user_id: string,
+  // ): Promise<UserAddressEntity> {
+  //   const userRepository = this.dataSource.getRepository(UserAddressEntity);
+  //   const body = {
+  //     ...addressBody,
+  //     is_active: false,
+  //     type: 'OTHER',
+  //     updated_by: user_id,
+  //   };
+  //   return await userRepository.save(body);
+  // }
+  //
+  // async getUserAddressesInternal(
+  //   addressId: number,
+  // ): Promise<UserAddressEntity> {
+  //   const userRepository = this.dataSource.getRepository(UserAddressEntity);
+  //
+  //   const address = await userRepository
+  //     .createQueryBuilder()
+  //     .where({
+  //       id: addressId,
+  //     })
+  //     .getOne();
+  //
+  //   if (!address) {
+  //     throw new HttpException(
+  //       { message: 'Address is not found' },
+  //       HttpStatus.NOT_FOUND,
+  //     );
+  //   }
+  //
+  //   return address;
+  // }
+  //
+  //
+  //
+  // async updateUserAddressByAdmin(
+  //   addressBody: UpdateAddressDto,
+  //   user_id: string,
+  //   addressId: bigint,
+  // ): Promise<UserAddressEntity> {
+  //   const userAddressRepository =
+  //     this.dataSource.getRepository(UserAddressEntity);
+  //
+  //   const address = await userAddressRepository.findOne({
+  //     where: { id: addressId },
+  //   });
+  //
+  //   if (address == null) {
+  //     throw new HttpException(
+  //       { message: 'Address not found' },
+  //       HttpStatus.NOT_FOUND,
+  //     );
+  //   }
+  //
+  //   address.address_line_1 = addressBody.address_line_1;
+  //   address.address_line_2 = addressBody.address_line_2;
+  //   address.city = addressBody.city;
+  //   address.state = addressBody.state;
+  //   address.landmark = addressBody.landmark;
+  //   address.pincode = addressBody.pincode;
+  //   // address.updated_by = user_id;
+  //
+  //   return await userAddressRepository.save(address);
+  // }
+  //
+  // async getUserAddressesByAdmin(user_id: string): Promise<UserAddressEntity[]> {
+  //   const userAddressRepository =
+  //     this.dataSource.getRepository(UserAddressEntity);
+  //   return await userAddressRepository.findBy({
+  //     user_id: user_id,
+  //     is_active: true,
+  //   });
+  // }
 }

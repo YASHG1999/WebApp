@@ -1,24 +1,23 @@
 import { Entity, Column, PrimaryGeneratedColumn, Index } from 'typeorm';
-import { UserRole } from './enum/user.role';
 import Any = jasmine.Any;
-import { CommonEntity } from '../core/common/common.entity';
+import {CommonEntity} from "../../core/common/common.entity";
 
 @Entity({ name: 'users', schema: 'public' })
-export class UserEntity extends CommonEntity {
+export class UsersEntity  {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column()
   first_name: string;
 
-  @Column()  
+  @Column()
   middle_name: string;
 
   @Column()
   last_name: string;
 
   @Column()
-  phone_no: string;
+  phone_no: number;
 
   @Column()
   email: string;

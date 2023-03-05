@@ -15,6 +15,8 @@ import { ApiBody, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/createOrder.dto';
 import {UpdateOrderDto} from "./dto/UpdateOrderDto";
+import {UpdateCategoryDto} from "../category/dto/updateCategory.dto";
+import {isNumber} from "class-validator";
 
 
 @Controller('order')
@@ -28,12 +30,27 @@ export class OrderController {
         @Body() reqBody: CreateOrderDto,
         @Headers('userId') createdBy: string,
     ) {
-        return this.orderService.getNewOrders();
+        return this.orderService.createOrder(reqBody,createdBy);
+    }
+
+
+    @Patch('/:orderId')
+    updateOrder(
+        @Body() reqBody: UpdateOrderDto,
+        @Param() param,
+        @Headers('userId') createdBy: string,
+    ) {
+        const orderId = parseInt(param.orderId);
+        return this.orderService.updateOrder(
+            reqBody,
+            orderId,
+            createdBy,
+        );
     }
 
     @Get(':id')
-    async getOrder(@Param('id') id: string){
-        const order = await this.orderService.getOrderById();
+    async getOrder(@Param('id') id: number){
+        const order = await this.orderService.getOrderById(id);
         if (order == null) {
             throw new HttpException('user not found', HttpStatus.NOT_FOUND);
         }
@@ -46,12 +63,13 @@ export class OrderController {
 
 
     @Delete('delete')
+
     deleteOrder(@Headers('orderId') orderId) {
         const a = this.orderService.deleteOrder(orderId);
         return a;
     }
 
-
+//path variable
 
 
 

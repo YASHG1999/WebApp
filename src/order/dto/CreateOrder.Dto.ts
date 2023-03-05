@@ -7,7 +7,6 @@ import {
 
 } from 'class-validator';
 export class CreateOrderDto {
-
     @IsNumber()
     @ApiProperty()
     Order_id: number;

@@ -49,10 +49,11 @@ export class ProductsService {
 
       existingProduct = await this.productsRepository.findOneBy({ id: productId });
       existingProduct.packet_description = productBody.packet_description;
+      await this.productsRepository.save(existingProduct);
      return existingProduct;
 
     }
-
+//id fetch
   async getAllProduct(){
   const userRepository = this.dataSource.getRepository(ProductsEntity);
   return await userRepository.find({where:{is_active:true}});

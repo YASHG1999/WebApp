@@ -6,7 +6,7 @@ import { ProductsEntity } from './entities/product.entity';
 import { ProductsRole } from './enum/products.role';
 import { ApiBody, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { Roles, UserRole } from 'src/core/common/custom.decorator';
+// import { Roles, UserRole } from 'src/core/common/custom.decorator';
 
 
 
@@ -15,10 +15,10 @@ import { Roles, UserRole } from 'src/core/common/custom.decorator';
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
-//doubt on readonly does it effects update api??
+//doubt on --readonly-- does it effect update api??
   @ApiBody({ type: CreateProductDto })
   @Post()
-  @Roles(UserRole.ADMIN)
+  // @Roles(UserRole.ADMIN)
   createProduct(
     @Body() reqBody: CreateProductDto,
     @Headers('userId') createdBy: string,
@@ -28,7 +28,7 @@ export class ProductsController {
 
   @ApiBody({ type: UpdateProductDto })
   @ApiParam({ name: 'productId', required: true })
-  @Roles(UserRole.ADMIN)
+  // @Roles(UserRole.ADMIN)
   @Patch('/:productId')
   updateProduct(
     @Body() reqBody: UpdateProductDto,

@@ -1,0 +1,16 @@
+import {Column} from "typeorm";
+
+export class UserAddressDto {
+
+    id?: bigint;
+    user_id?: string;
+    name?: string;
+    is_default?: boolean;
+    address_line_1?: string;
+    address_line_2?: string;
+    landmark?: string;
+    state?: string;
+    country?: string;
+    pincode?: number;
+    is_active?: boolean;
+}

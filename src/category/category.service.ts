@@ -31,12 +31,15 @@ export class CategoryService {
     categoryId: number,
     updatedBy: string,
   ) {
-
     let category = null;
+    console.log(categoryBody)
     let existingCategory:CategoryEntity = null;
 
       existingCategory = await this.categoryRepository.findOneBy({ id : categoryId});
-
+      existingCategory.name = categoryBody.name;
+      await this.categoryRepository.save(existingCategory);
+      return existingCategory;
+//save and return
     }
 
   async getAllCategory() {

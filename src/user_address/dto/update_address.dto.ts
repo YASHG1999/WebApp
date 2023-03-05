@@ -8,20 +8,23 @@ import {
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { AddressType } from '../enum/address.enum';
+import {Column, PrimaryGeneratedColumn} from "typeorm";
 
 export class UpdateAddressDto {
   @ApiPropertyOptional()
   @IsOptional()
   id: bigint;
 
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  user_id: string;
+
   @ApiPropertyOptional()
   @IsString()
   @IsOptional()
   name: string;
 
-  @IsString()
-  @IsOptional()
-  type: string;
 
   @IsBoolean()
   @ApiPropertyOptional()
@@ -60,3 +63,23 @@ export class UpdateAddressDto {
   pincode: number;
 
 }
+
+
+
+
+
+
+
+//
+//
+//
+// @ApiPropertyOptional()
+// @Column({ nullable: true })
+// country: string;
+//
+//
+//
+// @ApiPropertyOptional()
+// @Column({ default: true })
+// is_active: boolean;
+//
